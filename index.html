@@ -3,60 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DREAMSTEAM Robot Control</title>
-    <!-- ¡Aquí está la meta etiqueta de verificación de Google Search Console! -->
-    <meta name="google-site-verification" content="DxWzq6orsVZ4wTTyPv21cri5ZKaZ_5Ef3oEQX1qxrDc" />
+    <title>DREAMSTEAM - Detector de Plagio con IA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- NOTE: KaTeX library has been completely removed -->
     <style>
-        /* Custom styles for a polished look and feel */
         body {
             font-family: 'Inter', sans-serif;
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
-
-        /* Light mode base styles */
-        body {
-            background-color: #f0f2f5; 
-            color: #1f2937; /* gray-800 */
-        }
-
-        /* Dark mode base styles */
-        body.dark {
-            background-color: #0f172a; /* slate-900 */
-            color: #e2e8f0; /* gray-200 */
-        }
-
-        .screen, .modal-content {
+        body { background-color: #f0f2f5; color: #1f2937; }
+        body.dark { background-color: #0f172a; color: #e2e8f0; }
+        
+        .screen {
             background-color: white;
-            transition: background-color 0.3s ease, color 0.3s ease, opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-            border-radius: 1.5rem; /* rounded-2xl */
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); /* shadow-2xl */
-            padding: 2rem; /* Consistent padding */
+            transition: all 0.3s ease;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
-        body.dark .screen, body.dark .modal-content {
-            background-color: #1e293b; /* slate-800 */
-            color: #e2e8f0; /* gray-200 */
+        body.dark .screen { background-color: #1e293b; }
+        
+        /* Ajuste para burbujas de chat */
+        .chat-bubble {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 20px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
         }
-
-        input, button, textarea {
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-            border-radius: 0.5rem; /* rounded-lg */
+        .user-bubble {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            border-bottom-right-radius: 4px;
         }
-        body.dark input, body.dark textarea {
-            background-color: #334155; /* slate-700 */
-            border-color: #475569; /* slate-600 */
-            color: #e2e8f0; /* gray-200 */
+        .ai-bubble {
+            background-color: #e5e7eb;
+            color: #1f2937;
+            border-bottom-left-radius: 4px;
         }
-        body.dark input::placeholder, body.dark textarea::placeholder {
-            color: #94a3b8; /* slate-400 */
-        }
-
+        body.dark .ai-bubble { background-color: #334155; color: #e2e8f0; }
+        
         .toast {
             position: fixed;
             bottom: 20px;
@@ -64,1434 +52,933 @@
             transform: translateX(-50%);
             padding: 12px 24px;
             border-radius: 9999px;
-            background-color: #2d3748;
+            background-color: #1e293b;
             color: white;
-            font-size: 0.875rem;
             z-index: 100;
             opacity: 0;
-            visibility: hidden;
             transition: all 0.3s ease;
         }
-        .toast.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) translateY(0);
-        }
-        .screen.hidden, .modal.hidden {
-            opacity: 0;
-            transform: scale(0.95);
-            pointer-events: none;
-            position: absolute;
-        }
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
-            transition: opacity 0.3s ease;
-        }
-        .modal.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-
-        .chat-bubble {
-            max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 20px;
-            word-wrap: break-word;
-            white-space: pre-wrap; /* Preserve whitespace and line breaks */
-        }
-        .user-bubble {
-            background-color: #3b82f6; /* blue-500 */
-            color: white;
-            border-bottom-right-radius: 4px;
-            align-self: flex-end;
-        }
-        .ai-bubble {
-            background-color: #e5e7eb; /* gray-200 */
-            color: #1f2937; /* gray-800 */
-            border-bottom-left-radius: 4px;
-            align-self: flex-start;
-        }
-        body.dark .ai-bubble {
-            background-color: #334155; /* slate-700 */
-            color: #e2e8f0; /* gray-200 */
-        }
-        .chat-bubble img {
-            max-width: 100%;
-            border-radius: 0.5rem;
-            margin-top: 0.5rem;
-        }
-        /* Style for lists inside chat bubbles */
-        .ai-bubble ul {
-            list-style-type: disc;
-            padding-left: 20px;
-            margin-top: 8px;
-        }
-        .ai-bubble li {
-            margin-bottom: 4px;
-        }
-
-        .subject-card {
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease;
-            border-radius: 0.75rem; /* rounded-lg */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* subtle shadow */
-        }
-        .subject-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 10px -2px rgba(0, 0, 0, 0.1);
-        }
-        body.dark .subject-card {
-            background-color: #334155; /* slate-700 */
-            border-color: #475569; /* slate-600 */
-        }
-        body.dark .subject-card .text-sky-800, body.dark .subject-card .text-indigo-800,
-        body.dark .subject-card .text-rose-800, body.dark .subject-card .text-amber-800 {
-            color: #cbd5e0; /* gray-300 for titles in dark mode */
-        }
-        body.dark .subject-card .text-sky-700, body.dark .subject-card .text-indigo-700,
-        body.dark .subject-card .text-rose-700, body.dark .subject-card .text-amber-700 {
-            color: #a0aec0; /* gray-400 for text in dark mode */
-        }
-
-
-        #mic-btn.listening {
-            color: #ef4444; /* red-500 */
+        .toast.show { opacity: 1; }
+        
+        .similarity-high { background-color: #fef2f2; border-color: #fecaca; }
+        .similarity-medium { background-color: #fffbeb; border-color: #fde68a; }
+        .similarity-low { background-color: #f0fdf4; border-color: #bbf7d0; }
+        body.dark .similarity-high { background-color: #450a0a; border-color: #7f1d1d; }
+        body.dark .similarity-medium { background-color: #451a03; border-color: #78350f; }
+        body.dark .similarity-low { background-color: #052e16; border-color: #166534; }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         
-        /* General button styles for better dark mode compatibility */
-        .btn-primary {
-            background-color: #3b82f6; /* blue-500 */
+        .btn-gradient {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
             color: white;
-            font-weight: 600; /* font-semibold */
-            padding: 0.75rem 1rem; /* py-3 px-4 */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
-            transition: background-color 0.2s ease;
-        }
-        .btn-primary:hover {
-            background-color: #2563eb; /* blue-600 */
-        }
-        .btn-danger {
-            background-color: #ef4444; /* red-500 */
-        }
-        .btn-danger:hover {
-            background-color: #dc2626; /* red-600 */
-        }
-        .btn-secondary {
-            background-color: #e2e8f0; /* gray-200 */
-            color: #4a5568; /* gray-700 */
             font-weight: 600;
-            padding: 0.5rem 1rem; /* py-2 px-4 */
-            transition: background-color 0.2s ease, color 0.2s ease;
+            transition: all 0.2s ease;
         }
-        .btn-secondary:hover {
-            background-color: #cbd5e0; /* gray-300 */
+        .btn-gradient:hover {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            transform: translateY(-1px);
         }
-        body.dark .btn-secondary {
-            background-color: #4a5568; /* gray-700 */
-            color: #e2e8f0; /* gray-200 */
+        
+        input, textarea {
+            transition: all 0.2s ease;
         }
-        body.dark .btn-secondary:hover {
-            background-color: #64748b; /* gray-600 */
-        }
-
-        /* Profile card styles */
-        .profile-option-card {
-            border-radius: 0.75rem; /* rounded-lg */
-            padding: 1rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.1s ease;
-        }
-        .profile-option-card:hover {
-            background-color: #e2e8f0; /* gray-200 */
-            transform: translateY(-2px);
-        }
-        body.dark .profile-option-card {
-            background-color: #334155; /* slate-700 */
-            color: #e2e8f0; /* gray-200 */
-        }
-        body.dark .profile-option-card:hover {
-            background-color: #475569; /* slate-600 */
-        }
-        body.dark .profile-option-card .text-gray-600 {
-            color: #a0aec0; /* gray-400 */
-        }
-
-        /* Robot Control Styles */
-        .battery-indicator {
-            display: none; /* Hidden by default */
-        }
-        .battery-indicator.visible {
-            display: block; /* Shown when connected */
-        }
-        .control-button {
-            background-color: #e2e8f0; /* gray-200 */
-            color: #4a5568; /* gray-700 */
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.2s ease, color 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            user-select: none; /* Prevent text selection on hold */
-        }
-        .control-button:hover {
-            background-color: #cbd5e0; /* gray-300 */
-        }
-        body.dark .control-button {
-            background-color: #4a5568; /* gray-700 */
-            color: #e2e8f0; /* gray-200 */
-        }
-        body.dark .control-button:hover {
-            background-color: #64748b; /* gray-600 */
-        }
-        .control-button.stop {
-            background-color: #ef4444; /* red-500 */
-            color: white;
-        }
-        .control-button.stop:hover {
-            background-color: #dc2626; /* red-600 */
-        }
-
-        /* Image preview in chat input */
-        #image-preview-container {
-            position: relative;
-            display: none;
-            margin-bottom: 0.5rem;
-            padding: 0.5rem;
-            border-radius: 0.5rem;
-            background-color: #f0f4f8;
-            width: fit-content;
-        }
-        body.dark #image-preview-container {
+        body.dark input, body.dark textarea {
             background-color: #334155;
+            border-color: #475569;
+            color: #e2e8f0;
         }
-        #image-preview {
-            max-width: 100px;
-            max-height: 100px;
-            border-radius: 0.25rem;
-            object-fit: cover;
+        
+        .document-card {
+            transition: all 0.2s ease;
         }
-        #remove-image-btn {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background-color: rgba(0,0,0,0.6);
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            line-height: 20px;
-            cursor: pointer;
-            border: 1px solid white;
+        .document-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
+        
+        /* Scroll personalizado */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        body.dark ::-webkit-scrollbar-thumb { background: #475569; }
 
-        /* Profile picture container */
-        .profile-picture-container {
-            position: relative;
-            width: 96px; /* w-24 */
-            height: 96px; /* h-24 */
-            margin: 0 auto 1rem; /* mx-auto mb-4 */
-            border-radius: 9999px; /* rounded-full */
-            background-color: #bfdbfe; /* blue-200 */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            border: 2px solid #3b82f6; /* blue-500 */
-        }
-
-        .profile-picture-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .profile-picture-container .initial {
-            font-size: 3rem; /* text-5xl */
-            font-weight: 700; /* font-bold */
-            color: #1e40af; /* blue-800 */
-        }
-
-        .profile-picture-upload-btn {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            background-color: #3b82f6; /* blue-500 */
-            color: white;
-            border-radius: 50%;
-            padding: 0.3rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-        .profile-picture-upload-btn:hover {
-            background-color: #2563eb; /* blue-600 */
-        }
+        /* Animaciones */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .animate-spin { animation: spin 1s linear infinite; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-teal-50 dark:from-slate-900 dark:to-blue-900 flex items-center justify-center min-h-screen p-4 sm:p-6 md:p-8">
-    <div id="toast-notification" class="toast"></div>
+<body class="min-h-screen">
+    <div id="toast" class="toast"></div>
 
-    <!-- RESPONSIVE: Container now expands on larger screens -->
-    <div class="w-full max-w-md md:max-w-2xl lg:max-w-4xl mx-auto">
-        <!-- Pantalla de Login -->
-        <div id="login-screen" class="screen">
-            <div class="flex justify-center mb-4">
-                <svg class="w-24 h-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none"><circle cx="256" cy="256" r="256" fill="#0e4d73"/><path d="M256 120c-40 0-72 32-72 72v48h-16c-18 0-32 14-32 32v96c0 18 14 32 32 32h176c18 0 32-14 32-32v-96c0-18-14-32-32-32h-16v-48c0-40-32-72-72-72z" fill="#f8f8f8"/><rect x="200" y="160" width="112" height="96" rx="48" fill="#6ec1e4"/><circle cx="232" cy="200" r="8" fill="#0e4d73"/><circle cx="280" cy="200" r="8" fill="#0e4d73"/><path d="M232 224c8 8 40 8 48 0" stroke="#0e4d73" stroke-width="4" stroke-linecap="round"/><circle cx="256" cy="96" r="12" fill="#f8f8f8"/><rect x="248" y="84" width="16" height="20" fill="#f8f8f8"/></svg>
-            </div>
-            <h1 class="text-3xl font-bold text-center mb-2">DREAMSTEAM</h1>
-            <p class="text-center text-gray-500 dark:text-gray-400 mb-8">Inicia sesión para continuar</p>
-            <div class="space-y-4">
-                <input type="text" placeholder="Correo electrónico o Nombre de usuario" id="email-or-username" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="password" placeholder="Contraseña" id="password" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <button onclick="login()" class="w-full mt-6 btn-primary">Iniciar sesión</button>
-            <div class="flex justify-between mt-4">
-                <a href="#" onclick="showForgotPassword()" class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">¿Olvidaste tu contraseña?</a>
-                <a href="#" onclick="showRegister()" class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">Regístrate</a>
-            </div>
-        </div>
-
-        <!-- Pantalla de Registro -->
-        <div id="register-screen" class="screen hidden">
-            <h1 class="text-3xl font-bold text-center mb-8">Crear Cuenta</h1>
-            <div class="space-y-4">
-                <input type="text" placeholder="Nombre completo" id="reg-name" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="email" placeholder="Correo electrónico" id="reg-email" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="password" placeholder="Contraseña" id="reg-password" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <button onclick="register()" class="w-full mt-6 btn-primary">Registrarse</button>
-            <p class="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">¿Ya tienes cuenta? <a href="#" onclick="showLogin()" class="font-medium text-blue-600 hover:underline dark:text-blue-400">Inicia sesión</a></p>
-        </div>
-
-        <!-- Pantalla de Olvidé Contraseña -->
-        <div id="forgot-password-screen" class="screen hidden">
-            <h1 class="text-3xl font-bold text-center mb-8">Recuperar Contraseña</h1>
-            <p class="text-center text-gray-600 dark:text-gray-400 mb-6">Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.</p>
-            <input type="email" placeholder="Correo electrónico" id="forgot-email" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button onclick="sendPasswordResetLink()" class="w-full mt-6 btn-primary">Enviar enlace</button>
-            <p class="text-center text-sm text-gray-600 dark:text-gray-400 mt-6"><a href="#" onclick="showLogin()" class="font-medium text-blue-600 hover:underline dark:text-blue-400">Volver a iniciar sesión</a></p>
-        </div>
-
-        <!-- Pantalla de Restablecer Contraseña -->
-        <div id="reset-password-screen" class="screen hidden">
-            <h1 class="text-3xl font-bold text-center mb-8">Restablecer Contraseña</h1>
-            <p class="text-center text-gray-600 dark:text-gray-400 mb-6">Ingresa tu nueva contraseña.</p>
-            <div class="space-y-4">
-                <input type="password" placeholder="Nueva Contraseña" id="reset-new-password" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="password" placeholder="Confirmar Nueva Contraseña" id="reset-confirm-password" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <button onclick="resetPassword()" class="w-full mt-6 btn-primary">Guardar nueva contraseña</button>
-        </div>
-
-        <!-- Pantalla de Asignaturas -->
-        <div id="subjects-screen" class="screen hidden">
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center space-x-2">
-                    <svg class="w-24 h-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none"><circle cx="256" cy="256" r="256" fill="#0e4d73"/><path d="M256 120c-40 0-72 32-72 72v48h-16c-18 0-32 14-32 32v96c0 18 14 32 32 32h176c18 0 32-14 32-32v-96c0-18-14-32-32-32h-16v-48c0-40-32-72-72-72z" fill="#f8f8f8"/><rect x="200" y="160" width="112" height="96" rx="48" fill="#6ec1e4"/><circle cx="232" cy="200" r="8" fill="#0e4d73"/><circle cx="280" cy="200" r="8" fill="#0e4d73"/><path d="M232 224c8 8 40 8 48 0" stroke="#0e4d73" stroke-width="4" stroke-linecap="round"/><circle cx="256" cy="96" r="12" fill="#f8f8f8"/><rect x="248" y="84" width="16" height="20" fill="#f8f8f8"/></svg>
+    <div id="welcome-screen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="screen w-full max-w-lg p-8 relative">
+            <button onclick="toggleDarkMode()" class="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                <svg id="theme-icon-welcome" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                </svg>
+            </button>
+            
+            <div class="text-center mb-8">
+                <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-xl">
+                    <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
                 </div>
-                <div class="flex space-x-2">
-                    <button onclick="toggleDarkMode()" class="p-2 rounded-full btn-secondary" title="Alternar Modo Oscuro"><svg id="dark-mode-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button>
-                    <button onclick="showProfile()" class="p-2 rounded-full btn-secondary" title="Ver Perfil"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></button>
-                </div>
-            </div>
-            <h2 class="text-3xl font-bold mb-2">Asignaturas STEAM</h2>
-            <p id="welcome-message" class="text-center text-gray-500 dark:text-gray-400 mb-6"></p>
-            <div class="space-y-4">
-                <div onclick="showSubjectDetail('science')" class="subject-card bg-sky-100 p-4 border border-sky-200"><h3 class="font-bold text-sky-800">Ciencia</h3><p class="text-sm text-sky-700">Explora los principios de la naturaleza, la física y la biología.</p></div>
-                <div onclick="showSubjectDetail('technology')" class="subject-card bg-indigo-100 p-4 border border-indigo-200"><h3 class="font-bold text-indigo-800">Tecnología</h3><p class="text-sm text-indigo-700">Aprende sobre innovación digital, software y dispositivos.</p></div>
-                <div onclick="showSubjectDetail('engineering')" class="subject-card bg-rose-100 p-4 border border-rose-200"><h3 class="font-bold text-rose-800">Ingeniería</h3><p class="text-sm text-rose-700">Diseña, construye y mejora estructuras, máquinas y procesos.</p></div>
-                <div onclick="showSubjectDetail('math')" class="subject-card bg-amber-100 p-4 border border-amber-200"><h3 class="font-bold text-amber-800">Matemáticas</h3><p class="text-sm text-amber-700">Desarrolla habilidades en lógica, cálculo y resolución de problemas.</p></div>
-            </div>
-            <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button onclick="showChat()" class="w-full py-3 bg-teal-500 text-white font-semibold rounded-lg shadow-md hover:bg-teal-600 transition-colors">Chatear con DREAMSTEAM</button>
-                <button onclick="goToControl()" class="w-full py-3 bg-gray-800 text-white font-semibold rounded-lg shadow-md hover:bg-gray-900 transition-colors">Control del Robot</button>
-            </div>
-        </div>
-        
-        <!-- Pantalla de Detalles de Asignatura -->
-        <div id="subject-detail-screen" class="screen hidden">
-            <div class="flex justify-between items-center mb-6">
-                <h2 id="subject-detail-title" class="text-3xl font-bold"></h2>
-                <button onclick="switchScreen('subject-detail-screen', 'subjects-screen')" class="p-2 rounded-full btn-secondary" title="Volver a Asignaturas"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button>
-            </div>
-            <p id="subject-detail-description" class="text-lg text-gray-600 dark:text-gray-400 mb-6"></p>
-            <button onclick="showActivities()" class="w-full btn-primary">Ver Actividades</button>
-        </div>
-
-        <!-- Pantalla de Actividades -->
-        <div id="activities-screen" class="screen hidden">
-            <div class="flex justify-between items-center mb-6">
-                <h2 id="activities-title" class="text-3xl font-bold"></h2>
-                <button onclick="switchScreen('activities-screen', 'subject-detail-screen')" class="p-2 rounded-full btn-secondary" title="Volver a Detalles"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button>
-            </div>
-            <p id="activities-description" class="text-lg text-gray-600 dark:text-gray-400 mb-6">Elige una actividad y chatea con DREAMSTEAM para empezar.</p>
-            <div id="activities-list" class="space-y-4">
-                <!-- Las actividades se renderizarán aquí -->
-            </div>
-            <button onclick="switchScreen('activities-screen', 'subject-detail-screen')" class="w-full mt-8 py-2 text-sm btn-secondary">Volver</button>
-        </div>
-        
-        <!-- Pantalla de Perfil de Usuario -->
-        <div id="profile-screen" class="screen hidden">
-            <h2 class="text-3xl font-bold text-center mb-6">Mi Perfil</h2>
-            <div class="text-center mb-6">
-                <div class="profile-picture-container">
-                    <img id="profile-picture" src="#" alt="Foto de perfil" class="hidden">
-                    <span id="profile-initial" class="initial">U</span>
-                    <input type="file" id="profile-image-input" accept="image/*" class="hidden">
-                    <button onclick="document.getElementById('profile-image-input').click()" class="profile-picture-upload-btn" title="Cambiar foto de perfil">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                    </button>
-                </div>
-                <div class="flex items-center justify-center space-x-2">
-                    <p class="text-2xl font-semibold"><span id="profile-user-name"></span></p>
-                    <button onclick="showEditNameModal()" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600" title="Editar nombre">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
-                    </button>
-                </div>
-                <p class="text-sm text-gray-500 dark:text-gray-400" id="profile-user-email"></p>
+                <h1 class="text-4xl font-bold gradient-text mb-2">DREAMSTEAM</h1>
+                <p class="text-gray-500 dark:text-gray-400 text-lg">Detector de Plagio e IA</p>
             </div>
 
             <div class="space-y-4">
-                <div onclick="showChangePassword()" class="profile-option-card flex items-center space-x-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                    <div>
-                        <p class="font-medium">Seguridad de la Cuenta</p>
-                        <p class="text-sm text-gray-600">Cambia tu contraseña.</p>
-                    </div>
-                </div>
-                <div onclick="showPrivacyScreen()" class="profile-option-card flex items-center space-x-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-500"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                    <div>
-                        <p class="font-medium">Privacidad y Datos</p>
-                        <p class="text-sm text-gray-600">Gestiona tus datos de la aplicación.</p>
-                    </div>
-                </div>
-            </div>
-            <button onclick="logout()" class="w-full mt-6 btn-primary btn-danger">Cerrar Sesión</button>
-            <button onclick="switchScreen('profile-screen', 'subjects-screen')" class="w-full mt-4 py-2 text-sm btn-secondary">Volver</button>
-        </div>
-
-        <!-- Pantalla de Cambiar Contraseña -->
-        <div id="change-password-screen" class="screen hidden">
-            <h2 class="text-3xl font-bold text-center mb-6">Cambiar Contraseña</h2>
-            <div class="space-y-4">
-                <input type="password" placeholder="Contraseña Actual" id="current-password" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="password" placeholder="Nueva Contraseña" id="new-password" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="password" placeholder="Confirmar Nueva Contraseña" id="confirm-new-password" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div class="flex space-x-4 mt-6">
-                <button onclick="showProfile()" class="w-full py-2 text-sm btn-secondary">Cancelar</button>
-                <button onclick="changePassword()" class="w-full btn-primary">Guardar Cambios</button>
-            </div>
-        </div>
-
-        <!-- Pantalla de Privacidad -->
-        <div id="privacy-screen" class="screen hidden">
-            <h2 class="text-3xl font-bold text-center mb-6">Privacidad y Datos</h2>
-            <div class="text-sm space-y-4 text-gray-600 dark:text-gray-300">
-                <p>En DREAMSTEAM, valoramos tu privacidad. La información de tu cuenta (nombre, correo y foto de perfil) se almacena de forma segura. El historial de tus conversaciones se guarda para dar contexto al asistente, pero no se comparte con terceros.</p>
-                <p>Tienes control total sobre tus datos. Puedes eliminar todo tu historial de chat de nuestros servidores en cualquier momento. Esta acción es irreversible.</p>
-            </div>
-            <button onclick="showDeleteDataConfirmation()" class="w-full mt-6 btn-primary btn-danger">Eliminar mi historial de chat</button>
-            <button onclick="showProfile()" class="w-full mt-4 py-2 text-sm btn-secondary">Volver al Perfil</button>
-        </div>
-
-        <!-- Pantalla de Chat con el Robot -->
-        <div id="chat-screen" class="screen hidden flex flex-col h-[85vh] md:h-[80vh] max-h-[900px]">
-            <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                <h2 class="text-xl font-bold text-center flex-1">Chat con DREAMSTEAM</h2>
-                <button onclick="switchScreen('chat-screen', 'subjects-screen')" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600" title="Cerrar chat">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <input 
+                    type="text" 
+                    id="username-input" 
+                    placeholder="¿Cuál es tu nombre?"
+                    class="w-full h-14 px-4 text-center text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none"
+                    onkeypress="if(event.key === 'Enter') handleLogin()"
+                >
+                <button onclick="handleLogin()" class="btn-gradient w-full h-14 rounded-xl text-lg shadow-lg">
+                    Comenzar
                 </button>
             </div>
-            <div id="chat-window" class="flex-1 p-4 space-y-4 overflow-y-auto flex flex-col">
-                <!-- Mensajes del chat se añadirán aquí -->
-            </div>
-            <div class="p-4 border-t border-gray-200 dark:border-gray-700">
-                <!-- Image Preview Container -->
-                <div id="image-preview-container">
-                    <img id="image-preview" src="#" alt="Vista previa de la imagen">
-                    <button id="remove-image-btn">×</button>
+
+            <div class="mt-8 grid grid-cols-3 gap-4 text-center text-sm">
+                <div class="p-3 rounded-lg bg-blue-50 dark:bg-slate-700">
+                    <svg class="w-6 h-6 mx-auto mb-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span class="text-gray-600 dark:text-gray-300">Detecta IA</span>
                 </div>
-                <div class="flex items-center space-x-2">
-                    <!-- Image Upload Button -->
-                    <input type="file" id="image-input" accept="image/*" class="hidden">
-                    <button onclick="document.getElementById('image-input').click()" class="p-3 text-gray-500 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600" title="Adjuntar Imagen">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                <div class="p-3 rounded-lg bg-purple-50 dark:bg-slate-700">
+                    <svg class="w-6 h-6 mx-auto mb-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                    <span class="text-gray-600 dark:text-gray-300">Compara Docs</span>
+                </div>
+                <div class="p-3 rounded-lg bg-green-50 dark:bg-slate-700">
+                    <svg class="w-6 h-6 mx-auto mb-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span class="text-gray-600 dark:text-gray-300">Preciso</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-screen" class="min-h-screen p-4 md:p-6 hidden">
+        <div class="max-w-6xl mx-auto">
+            <div class="screen p-4 mb-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold gradient-text">DREAMSTEAM</h1>
+                            <p id="welcome-text" class="text-sm text-gray-500 dark:text-gray-400"></p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="toggleDarkMode()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
+                            <svg id="theme-icon-main" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                            </svg>
+                        </button>
+                        <button onclick="handleLogout()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-red-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <button onclick="openDirectChat()" class="screen p-6 text-left hover:shadow-xl transition-all group">
+                    <div class="flex items-start gap-4">
+                        <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold mb-1">Chat con IA</h3>
+                            <p class="text-gray-500 dark:text-gray-400">Pregunta sobre plagio y redacción</p>
+                        </div>
+                        <svg class="w-6 h-6 text-gray-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </button>
+
+                <button onclick="openPlagiarismDetector()" class="screen p-6 text-left hover:shadow-xl transition-all group border-2 border-purple-200 dark:border-purple-900">
+                    <div class="flex items-start gap-4">
+                        <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="text-xl font-bold">Detector Avanzado</h3>
+                                <span class="px-2 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 text-xs font-semibold rounded-full">PRINCIPAL</span>
+                            </div>
+                            <p class="text-gray-500 dark:text-gray-400">Analiza IA y compara documentos</p>
+                        </div>
+                        <svg class="w-6 h-6 text-gray-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+
+            <div class="screen p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold">Documentos Guardados (Base de Datos)</h2>
+                    <button onclick="openUploadModal()" class="btn-gradient px-4 py-2 rounded-lg flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Subir Documento
                     </button>
-                    <input type="text" id="chat-input" placeholder="Escribe un mensaje..." class="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500" oninput="updateSendButtonState()" onkeydown="if(event.key === 'Enter') sendMessage()">
-                    <div id="mic-button-container">
-                        <button id="mic-btn" onclick="toggleVoiceRecognition()" class="p-3 text-gray-500 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg></button>
-                    </div>
-                    <div id="send-button-container" class="hidden">
-                        <button onclick="sendMessage()" class="p-3 btn-primary rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+                </div>
+                
+                <div id="documents-list" class="space-y-3">
+                    <div class="text-center py-12 text-gray-400">
+                        <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <p>No hay documentos guardados</p>
+                        <p class="text-sm mt-1">Sube documentos para que el sistema los compare</p>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Pantalla de Control del Robot -->
-        <div id="robot-screen" class="screen hidden">
-            <div class="flex justify-between items-center mb-6">
-                <div class="flex items-center space-x-2">
-                    <svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none"><circle cx="256" cy="256" r="256" fill="#0e4d73"/><path d="M256 120c-40 0-72 32-72 72v48h-16c-18 0-32 14-32 32v96c0 18 14 32 32 32h176c18 0 32-14 32-32v-96c0-18-14-32-32-32h-16v-48c0-40-32-72-72-72z" fill="#f8f8f8"/><rect x="200" y="160" width="112" height="96" rx="48" fill="#6ec1e4"/><circle cx="232" cy="200" r="8" fill="#0e4d73"/><circle cx="280" cy="200" r="8" fill="#0e4d73"/><path d="M232 224c8 8 40 8 48 0" stroke="#0e4d73" stroke-width="4" stroke-linecap="round"/><circle cx="256" cy="96" r="12" fill="#f8f8f8"/><rect x="248" y="84" width="16" height="20" fill="#f8f8f8"/></svg>
-                    <h2 class="text-3xl font-bold">Control del Robot</h2>
+    <div id="chat-screen" class="fixed inset-0 flex flex-col bg-[#f0f2f5] dark:bg-[#0f172a] z-50 hidden">
+        <div class="flex-1 w-full max-w-4xl mx-auto flex flex-col h-full bg-white dark:bg-[#1e293b] shadow-xl md:rounded-2xl md:my-4 md:h-[calc(100vh-2rem)] overflow-hidden">
+            
+            <div class="p-4 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between bg-white dark:bg-[#1e293b] z-10">
+                <div class="flex items-center gap-3">
+                    <button onclick="goToMain()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold" id="chat-title">Asistente IA</h3>
+                            <p class="text-xs text-green-500 font-medium">En línea</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="clearChat()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700" title="Limpiar chat">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>
                 </div>
             </div>
-            <div id="battery-status-container" class="text-center mb-6 battery-indicator">
-                <p class="text-lg font-semibold">Nivel de Batería: <span id="robot-battery-level">--%</span></p>
-            </div>
-            <button id="bt-connect-btn" onclick="connectBluetooth()" class="w-full mb-6 py-3 btn-primary flex items-center justify-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 5V2l5 5L7 17"/></svg>
-                <span>Conectar vía Bluetooth</span>
-            </button>
-            <div class="controls grid grid-cols-3 gap-4 justify-items-center text-center">
-                <div></div>
-                <button onmousedown="moveRobot('forward')" onmouseup="moveRobot('stop')" ontouchstart="moveRobot('forward')" ontouchend="moveRobot('stop')" class="w-20 h-20 rounded-full text-3xl control-button">↑</button>
-                <div></div>
-                <button onmousedown="moveRobot('left')" onmouseup="moveRobot('stop')" ontouchstart="moveRobot('left')" ontouchend="moveRobot('stop')" class="w-20 h-20 rounded-full text-3xl control-button">←</button>
-                <button onclick="moveRobot('stop')" class="w-20 h-20 rounded-full text-2xl control-button stop">⏹</button>
-                <button onmousedown="moveRobot('right')" onmouseup="moveRobot('stop')" ontouchstart="moveRobot('right')" ontouchend="moveRobot('stop')" class="w-20 h-20 rounded-full text-3xl control-button">→</button>
-                <div></div>
-                <button onmousedown="moveRobot('backward')" onmouseup="moveRobot('stop')" ontouchstart="moveRobot('backward')" ontouchend="moveRobot('stop')" class="w-20 h-20 rounded-full text-3xl control-button">↓</button>
-                <div></div>
-            </div>
-            <button onclick="switchScreen('robot-screen', 'subjects-screen')" class="w-full mt-8 py-2 text-sm btn-secondary">Volver a Asignaturas</button>
-        </div>
 
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-slate-800/50">
+                </div>
+
+            <div id="image-preview-container" class="hidden px-4 pt-2 bg-white dark:bg-[#1e293b] border-t border-gray-100 dark:border-slate-700">
+                <div class="inline-flex items-start gap-2 p-2 rounded-lg bg-gray-100 dark:bg-slate-700">
+                    <img id="image-preview" class="h-20 rounded" src="" alt="Preview">
+                    <button onclick="removeImage()" class="p-1 rounded-full bg-red-500 text-white hover:bg-red-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-4 bg-white dark:bg-[#1e293b] border-t border-gray-200 dark:border-slate-700">
+                <div class="flex items-end gap-2">
+                    <input type="file" id="file-input" class="hidden" accept="image/*" onchange="handleImageUpload(event)">
+                    <button onclick="document.getElementById('file-input').click()" class="p-3 rounded-xl bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </button>
+                    <button id="mic-btn" onclick="toggleVoice()" class="p-3 rounded-xl bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+                        </svg>
+                    </button>
+                    <input 
+                        type="text" 
+                        id="chat-input" 
+                        placeholder="Escribe tu mensaje..."
+                        class="flex-1 h-12 px-4 border-2 border-gray-200 dark:border-slate-600 rounded-xl focus:border-blue-500 focus:outline-none bg-transparent"
+                        onkeypress="if(event.key === 'Enter') sendMessage()"
+                        autocomplete="off"
+                    >
+                    <button onclick="sendMessage()" class="btn-gradient p-3 rounded-xl shadow-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Modal para Editar Nombre -->
-    <div id="edit-name-modal" class="modal hidden">
-        <div class="modal-content w-full max-w-sm">
-            <h3 class="text-xl font-bold text-center mb-4">Cambiar Nombre</h3>
-            <input type="text" id="new-name-input" placeholder="Nuevo nombre" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <div class="flex space-x-4 mt-6">
-                <button onclick="hideEditNameModal()" class="w-full py-2 text-sm btn-secondary">Cancelar</button>
-                <button onclick="saveNewName()" class="w-full btn-primary">Guardar</button>
+    <div id="plagiarism-screen" class="min-h-screen p-4 md:p-6 hidden">
+        <div class="max-w-6xl mx-auto">
+            <div class="screen p-4 mb-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <button onclick="goToMain()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold">Detector de Plagio e IA</h1>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Analiza similitud y autoría IA</p>
+                        </div>
+                    </div>
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
+                        <svg id="theme-icon-plagiarism" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="screen p-6">
+                    <h3 class="font-bold mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Texto a Analizar
+                    </h3>
+                    <textarea 
+                        id="plagiarism-text" 
+                        placeholder="Pega aquí el texto que quieres analizar..."
+                        class="w-full h-64 p-4 border-2 border-gray-200 dark:border-slate-600 rounded-xl resize-none focus:border-purple-500 focus:outline-none"
+                    ></textarea>
+                    <div class="flex items-center justify-between mt-4">
+                        <span id="word-count" class="text-sm text-gray-500">0 palabras</span>
+                        <div class="flex gap-2">
+                            <button onclick="clearPlagiarismText()" class="px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600">
+                                Limpiar
+                            </button>
+                            <button onclick="analyzePlagiarism()" class="btn-gradient px-6 py-2 rounded-lg flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                                Analizar Todo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="screen p-6">
+                    <h3 class="font-bold mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        Resultados del Análisis
+                    </h3>
+                    <div id="plagiarism-results" class="space-y-4">
+                        <div class="text-center py-12 text-gray-400">
+                            <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            <p>Ingresa un texto para analizar</p>
+                            <p class="text-sm mt-1">Detectará similitud con documentos e IA</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen p-6 mt-6">
+                <h3 class="font-bold mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                    Comparar con Documentos Guardados
+                </h3>
+                <div id="compare-documents-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="text-center py-8 text-gray-400 col-span-full">
+                        <p>No hay documentos para comparar</p>
+                        <button onclick="openUploadModal()" class="mt-2 text-blue-500 hover:underline">Subir documentos</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Confirmación para Borrar Datos -->
-    <div id="delete-data-modal" class="modal hidden">
-        <div class="modal-content w-full max-w-sm">
-            <h3 class="text-xl font-bold text-center mb-2">¿Estás seguro?</h3>
-            <p class="text-center text-gray-600 dark:text-gray-400 mb-6">Esta acción no se puede deshacer. Se borrará todo tu historial de chat permanentemente.</p>
-            <div class="flex space-x-4">
-                <button onclick="hideDeleteDataConfirmation()" class="w-full py-2 text-sm btn-secondary">Cancelar</button>
-                <button onclick="deleteUserData()" class="w-full btn-primary btn-danger">Sí, eliminar todo</button>
+    <div id="upload-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="screen w-full max-w-md mx-4 p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold">Subir Documento</h3>
+                <button onclick="closeUploadModal()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Título del documento</label>
+                    <input type="text" id="doc-title" placeholder="Ej: Ensayo de historia" class="w-full h-12 px-4 border-2 border-gray-200 dark:border-slate-600 rounded-xl focus:border-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Autor / Estudiante</label>
+                    <input type="text" id="doc-author" placeholder="Nombre del autor" class="w-full h-12 px-4 border-2 border-gray-200 dark:border-slate-600 rounded-xl focus:border-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Grupo / Clase</label>
+                    <input type="text" id="doc-group" placeholder="Ej: 3° A Historia" class="w-full h-12 px-4 border-2 border-gray-200 dark:border-slate-600 rounded-xl focus:border-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Contenido del documento</label>
+                    <textarea id="doc-content" placeholder="Pega aquí el contenido del documento..." class="w-full h-32 p-4 border-2 border-gray-200 dark:border-slate-600 rounded-xl resize-none focus:border-blue-500 focus:outline-none"></textarea>
+                </div>
+                <button onclick="saveDocument()" class="btn-gradient w-full h-12 rounded-xl">
+                    Guardar Documento
+                </button>
             </div>
         </div>
     </div>
 
+    <div id="loading-overlay" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="screen p-8 text-center">
+            <div class="w-16 h-16 mx-auto mb-4 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-lg font-medium" id="loading-text">Analizando...</p>
+        </div>
+    </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { 
-            getAuth, 
-            createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword, 
-            sendPasswordResetEmail, 
-            confirmPasswordReset,
-            updatePassword, 
-            reauthenticateWithCredential, 
-            EmailAuthProvider,
-            onAuthStateChanged,
-            signOut // Import signOut for logout functionality
-        } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-        import { 
-            getFirestore, 
-            doc, 
-            setDoc, 
-            getDoc,
-            updateDoc,
-            collection, 
-            addDoc,     
-            query,      
-            where,      // Import where for querying by name
-            getDocs,
-            writeBatch
-        } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-        // Removed storage imports as they are no longer directly used for profile pictures
-
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBjCe4p4ClSPlkCvT265LnGPGGuFQf9Fa0",
-            authDomain: "dreamsteam-app-fd723.firebaseapp.com",
-            projectId: "dreamsteam-app-fd723",
-            storageBucket: "dreamsteam-app-fd723.appspot.com",
-            messagingSenderId: "217826305398",
-            appId: "1:217826305398:web:68d834fdc758421b63c657",
-            measurementId: "G-41HG0EJ76W"
+    <script>
+        // CONFIGURACIÓN DE SEGURIDAD (API KEY CORREGIDA)
+        const CONFIG = {
+            apiKey: 'AIzaSyCsD-oRxrNXHFCyXjiH05_3N17aytJzWoU', // NUEVA CLAVE APLICADA
+            model: 'gemini-1.5-flash',
+            apiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
         };
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        // --- Global variables ---
-        let userName = null;
-        let userEmail = null; 
-        let userProfilePicture = null; // To store the profile picture URL/Base64
+        // State
+        let userName = '';
+        let darkMode = false;
+        let documents = [];
+        let chatMessages = [];
+        let currentMode = 'general'; // 'general' or 'plagiarism'
+        let uploadedImage = null;
         let recognition = null;
         let isListening = false;
-        let localChatHistory = [];
-        let bluetoothDevice = null;
-        let selectedImageBase64 = null; // For image uploads
 
-        // Object with details of the subjects and activities
-        const subjectInfo = {
-            science: {
-                title: "Ciencia",
-                description: "Explora los principios de la naturaleza, la física y la biología.",
-                activities: [
-                    { name: "Experimento del Volcán Casero", desc: "Crea un volcán en erupción usando bicarbonato de sodio y vinagre para entender reacciones químicas. Necesitarás: botella pequeña, bicarbonato, vinagre, detergente, colorante, bandeja. Pasos: 1) Coloca la botella en la bandeja. 2) Añade bicarbonato y colorante. 3) Vierte vinagre y detergente y observa la 'erupción'. Útil un video de demostración o diagrama de los materiales." },
-                    { name: "Observación de Células", desc: "Usa un microscopio para observar células de cebolla o de tu mejilla para aprender sobre la biología celular. Necesitarás: microscopio, portaobjetos, cubreobjetos, pinzas, cebolla/hisopo, azul de metileno. Pasos: 1) Prepara una muestra fina. 2) Tiñe con azul de metileno. 3) Observa bajo el microscopio. Un video de preparación de muestras o imágenes de células reales sería muy útil." },
-                    { name: "Ciclo del Agua Interactivo", desc: "Diseña un modelo que explique el ciclo del agua para comprender la hidrología. Necesitarás: recipiente grande, vaso pequeño, plástico, piedra pequeña, agua, sol. Pasos: 1) Coloca el vaso en el centro del recipiente. 2) Vierte agua alrededor del vaso. 3) Cubre con plástico y coloca la piedra sobre el vaso. 4) Deja al sol y observa la condensación y evaporación. Un diagrama de las fases del ciclo del agua es clave." },
-                    { name: "Construcción de Ecosistema en Frasco", desc: "Crea un mini-ecosistema cerrado en un frasco para estudiar la interdependencia. Necesitarás: frasco grande, tierra, plantas pequeñas, carbón, agua, insectos pequeños. Pasos: 1) Capas de carbón, tierra. 2) Planta. 3) Añade agua y cierra. 4) Observa el equilibrio. Un diagrama de capas y un checklist de elementos te guiarán." }
-                ]
-            },
-            technology: {
-                title: "Tecnología",
-                description: "Aprende sobre innovación digital, software y dispositivos.",
-                activities: [
-                    { name: "Introducción a la Programación con Scratch", desc: "Crea tu primer videojuego o animación simple usando bloques visuales para entender la lógica de programación. Plataforma: Scratch (online). Pasos: 1) Elige un personaje y fondo. 2) Arrastra bloques de movimiento, eventos y control. 3) Haz que tu personaje interactúe. Videos tutoriales de Scratch son excelentes para empezar." },
-                    { name: "Diseño de Apps Móviles (Prototipo)", desc: "Usa herramientas sencillas para maquetar una idea de aplicación y aprender sobre diseño de interfaz de usuario. Herramientas: Figma (gratis online), papel y lápiz. Pasos: 1) Define la idea de tu app. 2) Dibuja bocetos de las pantallas principales. 3) Crea un prototipo interactivo. Ejemplos de buenas prácticas de UX/UI o plantillas de diseño son muy útiles." },
-                    { name: "Robot Seguidor de Líneas (Simulación)", desc: "Programa un robot virtual para seguir una línea en pantalla, explorando algoritmos básicos. Plataforma: Simuladores de robot online (ej. Code.org App Lab, Lego Mindstorms simulator). Pasos: 1) Abre el simulador. 2) Usa comandos para mover el robot. 3) Implementa lógica para detectar la línea y corregir la dirección. Un diagrama de flujo del algoritmo o un video de un robot real siguiendo una línea te inspirará." },
-                    { name: "Creación de un Blog Simple", desc: "Aprende los fundamentos de la creación web montando un blog sencillo con una plataforma gratuita. Plataforma: Blogger, WordPress.com. Pasos: 1) Elige un tema. 2) Publica tu primera entrada. 3) Personaliza el diseño. Un tutorial paso a paso sobre cómo usar la plataforma te ayudará a empezar." }
-                ]
-            },
-            engineering: {
-                title: "Ingeniería",
-                description: "Diseña, construye y mejora estructuras, máquinas y procesos.",
-                activities: [
-                    { name: "Construcción de Puentes de Palitos", desc: "Diseña y construye un puente de palitos de helado o espagueti que soporte el mayor peso posible. Materiales: palitos, pegamento, pesas. Pasos: 1) Investiga diseños de puentes (ej. armadura, arco). 2) Dibuja tu diseño. 3) Construye con precisión. 4) Prueba la resistencia. Los diagramas de tipos de puentes o fotos de estructuras resistentes son geniales." },
-                    { name: "Diseño de Vehículos Propulsados por Aire/Goma", desc: "Crea un coche simple propulsado por la fuerza del aire (globo) o una banda elástica. Materiales: cartón, ruedas (tapitas), palitos, globo/goma elástica. Pasos: 1) Recorta la base. 2) Fija ejes y ruedas. 3) Añade el mecanismo de propulsión. 4) Pruébalo y mejora. Un video que muestre los principios de acción-reacción o diferentes diseños de vehículos." },
-                    { name: "Reto de Ingeniería de Torres", desc: "Construye la torre más alta y estable posible utilizando materiales limitados como papel, cinta adhesiva y tijeras. Materiales: papel, cinta, tijeras, cinta métrica. Pasos: 1) Planifica tu diseño pensando en la base y la estabilidad. 2) Construye con cuidado. 3) Mide la altura. 4) Observa qué diseños son más eficientes. Fotografías de torres famosas o ejemplos de estructuras ligeras y fuertes." },
-                    { name: "Sistema de Riego por Goteo Casero", desc: "Diseña e implementa un sistema de riego por goteo simple para una planta, aprendiendo sobre la eficiencia del agua. Materiales: botella de plástico, cuerda, agua, planta. Pasos: 1) Haz un agujero pequeño en la base de la botella. 2) Entierra la cuerda hasta la raíz de la planta. 3) Llena la botella de agua y cuélgala. 4) Observa el goteo lento. Un diagrama de cómo funciona un sistema de goteo te ayudará a visualizarlo." }
-                ]
-            },
-            math: {
-                title: "Matemáticas",
-                description: "Desarrolla habilidades en lógica, cálculo y resolución de problemas.",
-                activities: [
-                    { name: "Juegos de Lógica y Problemas de Ingenio", desc: "Resuelve acertijos matemáticos y juegos de ingenio para mejorar tu pensamiento lógico y habilidades de resolución de problemas. Puedes buscar 'acertijos matemáticos para niños' en línea o en libros. Un video que explique estrategias para resolver problemas complejos o una lista de sitios web con desafíos matemáticos." },
-                    { name: "Geometría con Origamis", desc: "Explora formas geométricas, simetría y fracciones doblando papel (origami). Materiales: papel cuadrado. Pasos: 1) Sigue instrucciones de origami para crear formas básicas (caja, grulla). 2) Identifica las formas geométricas que se crean. 3) Observa la simetría. Videos tutoriales de origami o diagramas de plegado paso a paso son ideales." },
-                    { name: "El Desafío del Patrón Numérico", desc: "Descubre y extiende patrones en secuencias numéricas y visuales para desarrollar tu razonamiento abstracto. Ejemplos: 2, 4, 6, 8, ... ¿cuál sigue? O patrones con formas. Una serie de ejercicios con soluciones o un video que explique diferentes tipos de patrones." },
-                    { name: "Mapas y Escalas", desc: "Usa mapas reales (o dibuja uno de tu casa/escuela) y aprende a usar escalas para calcular distancias reales. Materiales: mapa (impreso o online), regla, calculadora. Pasos: 1) Encuentra la escala del mapa. 2) Mide una distancia en el mapa. 3) Usa la escala para calcular la distancia real. Un tutorial sobre cómo leer mapas y usar escalas sería muy instructivo." }
-                ]
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedName = localStorage.getItem('dreamsteam_username');
+            const savedDarkMode = localStorage.getItem('dreamsteam_darkmode') === 'true';
+            const savedDocs = localStorage.getItem('dreamsteam_documents');
+            
+            if (savedDocs) {
+                documents = JSON.parse(savedDocs);
             }
-        };
-        let currentSubjectKey = null;
-
-
-        // Listen for authentication state changes
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                userEmail = user.email;
-                fetchUserData(user.uid);
-                const activeScreen = document.querySelector('.screen:not(.hidden)');
-                // Only switch to subjects if currently on a login/register screen or no screen is active
-                if (!activeScreen || ['login-screen', 'register-screen', 'forgot-password-screen', 'reset-password-screen'].includes(activeScreen.id)) {
-                    showToast(`¡Bienvenido de vuelta!`);
-                    switchScreen(activeScreen ? activeScreen.id : 'login-screen', 'subjects-screen');
-                }
-                updateWelcomeMessage(); // Ensure welcome message is updated
-            } else {
-                userName = null;
-                userEmail = null;
-                userProfilePicture = null; // Clear profile picture on logout
-                const activeScreen = document.querySelector('.screen:not(.hidden)');
-                // Only switch to login if currently not on a login/register screen
-                if (activeScreen && !['login-screen', 'register-screen', 'forgot-password-screen', 'reset-password-screen'].includes(activeScreen.id)) {
-                    switchScreen(activeScreen.id, 'login-screen');
-                }
+            
+            darkMode = savedDarkMode;
+            if (darkMode) document.body.classList.add('dark');
+            updateThemeIcons();
+            
+            if (savedName) {
+                userName = savedName;
+                showScreen('main');
+                document.getElementById('welcome-text').textContent = 'Hola, ' + userName + ' 👋';
+                renderDocuments();
             }
+
+            // Initialize speech recognition
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'es-ES';
+                
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById('chat-input').value += transcript;
+                    stopListening();
+                };
+                
+                recognition.onerror = () => stopListening();
+                recognition.onend = () => stopListening();
+            }
+
+            // Word count listener
+            document.getElementById('plagiarism-text').addEventListener('input', updateWordCount);
         });
 
-        // Function to fetch user data from Firestore
-        async function fetchUserData(uid) {
-            try {
-                const userDocRef = doc(db, "users", uid);
-                const userDocSnap = await getDoc(userDocRef);
-                if (userDocSnap.exists()) {
-                    const userData = userDocSnap.data();
-                    userName = userData.name || userEmail.split('@')[0];
-                    userProfilePicture = userData.profilePicture || null; // Get profile picture
-                    console.log("Fetched user data:", userData); // Log fetched data
-                } else {
-                    const defaultName = auth.currentUser.email.split('@')[0];
-                    await setDoc(doc(db, "users", auth.currentUser.uid), { name: defaultName, email: auth.currentUser.email, createdAt: new Date(), profilePicture: null });
-                    userName = defaultName;
-                    userProfilePicture = null;
-                    console.log("New user document created with default name.");
-                }
-                updateWelcomeMessage(); // Update welcome message after fetching data
-            } catch (error) {
-                console.error("Error fetching user data:", error);
-                userName = userEmail.split('@')[0];
-                userProfilePicture = null;
-                updateWelcomeMessage();
+        // Screen navigation
+        function showScreen(screen) {
+            document.querySelectorAll('[id$="-screen"]').forEach(el => el.classList.add('hidden'));
+            document.getElementById(screen + '-screen').classList.remove('hidden');
+        }
+
+        function goToMain() {
+            showScreen('main');
+            renderDocuments();
+        }
+
+        // Auth
+        function handleLogin() {
+            const input = document.getElementById('username-input').value.trim();
+            if (input) {
+                userName = input;
+                localStorage.setItem('dreamsteam_username', userName);
+                document.getElementById('welcome-text').textContent = 'Hola, ' + userName + ' 👋';
+                showScreen('main');
+                showToast('¡Bienvenido, ' + userName + '!');
             }
         }
 
-        // Function to update the welcome message on the subjects screen
-        function updateWelcomeMessage() {
-            const welcomeMessageElement = document.getElementById('welcome-message');
-            if (auth.currentUser && userName) {
-                welcomeMessageElement.textContent = `¡Hola, ${userName}! Elige una asignatura para empezar.`;
-            } else {
-                welcomeMessageElement.textContent = ''; // Clear if not logged in or name not available
-            }
+        function handleLogout() {
+            localStorage.removeItem('dreamsteam_username');
+            userName = '';
+            chatMessages = [];
+            showScreen('welcome');
         }
 
-        // --- Utility and Navigation Functions ---
+        // Dark mode
+        function toggleDarkMode() {
+            darkMode = !darkMode;
+            document.body.classList.toggle('dark', darkMode);
+            localStorage.setItem('dreamsteam_darkmode', darkMode);
+            updateThemeIcons();
+        }
+
+        function updateThemeIcons() {
+            const sunPath = 'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z';
+            const moonPath = 'M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z';
+            const path = darkMode ? sunPath : moonPath;
+            
+            ['welcome', 'main', 'plagiarism'].forEach(id => {
+                const icon = document.getElementById('theme-icon-' + id);
+                if (icon) icon.querySelector('path').setAttribute('d', path);
+            });
+        }
+
+        // Toast
         function showToast(message) {
-            const toast = document.getElementById('toast-notification');
+            const toast = document.getElementById('toast');
             toast.textContent = message;
             toast.classList.add('show');
-            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+            setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
-        function switchScreen(hideId, showId) {
-            const hideScreen = document.getElementById(hideId);
-            const showScreen = document.getElementById(showId);
-            if(hideScreen) hideScreen.classList.add('hidden');
-            if(showScreen) showScreen.classList.remove('hidden');
+        // Chat functions
+        function openDirectChat() {
+            currentMode = 'general';
+            document.getElementById('chat-title').textContent = 'Asistente IA';
+            if (chatMessages.length === 0) {
+                chatMessages = [{
+                    role: 'ai',
+                    content: '¡Hola ' + userName + '! 👋 Soy tu asistente de DREAMSTEAM. Puedo ayudarte a:\n\n• **Analizar textos** para ver si fueron hechos por IA.\n• **Comparar documentos** para ver si son copias.\n• **Mejorar tu redacción**.\n\n¿Qué necesitas hoy?'
+                }];
+            }
+            renderChat();
+            showScreen('chat');
+        }
 
-            if (showId === 'robot-screen' && bluetoothDevice && bluetoothDevice.gatt.connected) {
-                document.getElementById('battery-status-container').classList.add('visible');
-            } else {
-                document.getElementById('battery-status-container').classList.remove('visible');
+        function openPlagiarismDetector() {
+            showScreen('plagiarism');
+            renderCompareDocuments();
+        }
+
+        function renderChat() {
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = chatMessages.map(msg => {
+                const bubbleClass = msg.role === 'user' ? 'user-bubble ml-auto' : 'ai-bubble mr-auto';
+                let content = msg.content
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/\n/g, '<br>');
+                
+                let imageHtml = '';
+                if (msg.image) {
+                    imageHtml = '<img src="' + msg.image + '" class="max-w-full rounded-lg mb-2" alt="Imagen">';
+                }
+                
+                return '<div class="chat-bubble ' + bubbleClass + '">' + imageHtml + content + '</div>';
+            }).join('');
+            
+            // Scroll to bottom
+            setTimeout(() => {
+                container.scrollTop = container.scrollHeight;
+            }, 100);
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (!message && !uploadedImage) return;
+            
+            const userMsg = { role: 'user', content: message };
+            if (uploadedImage) {
+                userMsg.image = uploadedImage;
+            }
+            chatMessages.push(userMsg);
+            renderChat();
+            input.value = '';
+            
+            // Show loading
+            const loadingId = 'loading-' + Date.now();
+            chatMessages.push({ role: 'ai', content: '...', id: loadingId });
+            renderChat();
+            
+            try {
+                const systemPrompt = 'Eres DREAMSTEAM Assistant, un experto en integridad académica. Tu objetivo es ayudar a detectar si un texto fue escrito por una IA o si es un plagio, y dar consejos de redacción. Responde en español de forma útil y directa.';
+                
+                const response = await callGemini(systemPrompt + '\n\nUsuario: ' + message);
+                
+                // Remove loading and add response
+                chatMessages = chatMessages.filter(msg => msg.id !== loadingId);
+                chatMessages.push({ role: 'ai', content: response });
+                renderChat();
+            } catch (error) {
+                chatMessages = chatMessages.filter(msg => msg.id !== loadingId);
+                chatMessages.push({ role: 'ai', content: 'Tuve un problema de conexión. ¿Podrías intentar de nuevo? (Error: API Fetch Failed)' });
+                renderChat();
+            }
+            
+            removeImage();
+        }
+
+        function clearChat() {
+            chatMessages = [{ role: 'ai', content: 'Chat limpiado. ¿En qué puedo ayudarte ahora?' }];
+            renderChat();
+            showToast('Chat limpiado');
+        }
+
+        // Image handling
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    uploadedImage = e.target.result;
+                    document.getElementById('image-preview').src = uploadedImage;
+                    document.getElementById('image-preview-container').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
             }
         }
 
-        window.showRegister = () => switchScreen('login-screen', 'register-screen');
-        window.showLogin = () => switchScreen(document.querySelector('.screen:not(.hidden)').id, 'login-screen');
-        window.showForgotPassword = () => switchScreen('login-screen', 'forgot-password-screen');
-        
-        function showResetPassword() {
-            const oobCode = new URLSearchParams(window.location.search).get('oobCode');
-            if (!oobCode) return showToast("Enlace inválido. Solicita uno nuevo.");
-            window.oobCode = oobCode; 
-            switchScreen(document.querySelector('.screen:not(.hidden)').id, 'reset-password-screen');
+        function removeImage() {
+            uploadedImage = null;
+            document.getElementById('image-preview-container').classList.add('hidden');
+            document.getElementById('file-input').value = '';
         }
 
-        window.showChangePassword = () => switchScreen('profile-screen', 'change-password-screen');
-        window.goToControl = () => switchScreen('subjects-screen', 'robot-screen');
-        
-        window.showProfile = () => {
-            if (auth.currentUser) {
-                document.getElementById('profile-user-name').textContent = userName || auth.currentUser.email;
-                document.getElementById('profile-user-email').textContent = auth.currentUser.email;
+        // Voice recognition
+        function toggleVoice() {
+            if (!recognition) {
+                showToast('Navegador no soporta voz');
+                return;
+            }
+            
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+                isListening = true;
+                document.getElementById('mic-btn').classList.add('text-red-500');
+            }
+        }
 
-                const profilePictureElement = document.getElementById('profile-picture');
-                const profileInitialElement = document.getElementById('profile-initial');
+        function stopListening() {
+            isListening = false;
+            document.getElementById('mic-btn').classList.remove('text-red-500');
+        }
 
-                console.log("showProfile: userProfilePicture before display logic:", userProfilePicture ? "exists" : "does not exist");
+        // Plagiarism detection
+        function updateWordCount() {
+            const text = document.getElementById('plagiarism-text').value;
+            const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+            document.getElementById('word-count').textContent = words + ' palabras';
+        }
 
-                if (userProfilePicture) {
-                    profilePictureElement.src = userProfilePicture;
-                    profilePictureElement.classList.remove('hidden');
-                    profileInitialElement.classList.add('hidden');
-                    console.log("showProfile: Displaying profile picture.");
-                } else {
-                    profilePictureElement.classList.add('hidden');
-                    profileInitialElement.classList.remove('hidden');
-                    profileInitialElement.textContent = (userName || auth.currentUser.email).charAt(0).toUpperCase();
-                    console.log("showProfile: Displaying user initial.");
+        function clearPlagiarismText() {
+            document.getElementById('plagiarism-text').value = '';
+            updateWordCount();
+        }
+
+        async function analyzePlagiarism() {
+            const text = document.getElementById('plagiarism-text').value.trim();
+            if (!text) {
+                showToast('Ingresa un texto para analizar');
+                return;
+            }
+
+            showLoading('Analizando similitudes y patrones de IA...');
+
+            try {
+                // 1. Compare with saved documents (Local)
+                let comparisonResults = [];
+                if (documents.length > 0) {
+                    for (const doc of documents) {
+                        const similarity = calculateSimilarity(text, doc.content);
+                        if (similarity > 10) {
+                            comparisonResults.push({
+                                title: doc.title,
+                                author: doc.author,
+                                similarity: similarity,
+                                matchingPhrases: findMatchingPhrases(text, doc.content)
+                            });
+                        }
+                    }
+                }
+
+                // 2. AI Analysis (Gemini)
+                const analysisPrompt = `
+                Actúa como un detector de plagio y detector de IA avanzado. Analiza el siguiente texto:
+                "${text.substring(0, 3000)}"
+                
+                Tu tarea es devolver un reporte con:
+                1. Probabilidad de que sea generado por IA (0-100%) y por qué (busca patrones repetitivos, falta de profundidad, estilo robótico).
+                2. Calidad de la redacción.
+                3. Si detectas parafraseo inusual.
+                
+                Dame la respuesta en formato estructurado HTML simple (usa <b> para negritas).
+                `;
+
+                const aiAnalysis = await callGemini(analysisPrompt);
+
+                hideLoading();
+                renderPlagiarismResults(comparisonResults, aiAnalysis, text.split(/\s+/).length);
+
+            } catch (error) {
+                hideLoading();
+                console.error(error);
+                showToast('Error de conexión al analizar');
+            }
+        }
+
+        function calculateSimilarity(text1, text2) {
+            const words1 = text1.toLowerCase().split(/\s+/);
+            const words2 = text2.toLowerCase().split(/\s+/);
+            
+            // Create n-grams (3 words) for better accuracy
+            const ngrams1 = [];
+            const ngrams2 = [];
+            
+            for (let i = 0; i < words1.length - 2; i++) {
+                ngrams1.push(words1.slice(i, i + 3).join(' '));
+            }
+            for (let i = 0; i < words2.length - 2; i++) {
+                ngrams2.push(words2.slice(i, i + 3).join(' '));
+            }
+            
+            if (ngrams1.length === 0) return 0;
+
+            const matches = ngrams1.filter(ng => ngrams2.includes(ng)).length;
+            const similarity = (matches / ngrams1.length) * 100;
+            
+            return Math.min(similarity, 100);
+        }
+
+        function findMatchingPhrases(text1, text2) {
+            const sentences1 = text1.split(/[.!?]+/).filter(s => s.trim().length > 20);
+            const sentences2 = text2.split(/[.!?]+/).filter(s => s.trim().length > 20);
+            
+            const matches = [];
+            for (const s1 of sentences1) {
+                for (const s2 of sentences2) {
+                    if (calculateSimilarity(s1, s2) > 60) {
+                        matches.push(s1.trim().substring(0, 80) + '...');
+                        if (matches.length >= 3) break;
+                    }
                 }
             }
-            switchScreen(document.querySelector('.screen:not(.hidden)').id, 'profile-screen');
-        };
-        
-        window.showChat = () => {
-            switchScreen('subjects-screen', 'chat-screen');
-            localChatHistory = [];
-            const chatWindow = document.getElementById('chat-window');
-            chatWindow.innerHTML = '';
-            const welcomeMsg = `¡Hola${userName ? ', ' + userName : ''}! Soy DREAMSTEAM. ¿En qué te puedo ayudar hoy?`;
-            addMessageToChat('ai', welcomeMsg);
-            localChatHistory.push({ role: 'model', parts: [{ text: welcomeMsg }] });
-        };
-        
-        // Función para mostrar los detalles de la asignatura
-        window.showSubjectDetail = (subjectKey) => {
-            currentSubjectKey = subjectKey;
-            const subject = subjectInfo[subjectKey];
-            if (!subject) return;
+            return matches;
+        }
 
-            document.getElementById('subject-detail-title').textContent = subject.title;
-            document.getElementById('subject-detail-description').textContent = subject.description;
-            switchScreen('subjects-screen', 'subject-detail-screen');
-        };
-
-        // Función para mostrar la lista de actividades
-        window.showActivities = () => {
-            if (!currentSubjectKey) return;
-            const subject = subjectInfo[currentSubjectKey];
-            document.getElementById('activities-title').textContent = `${subject.title} - Actividades`;
-            const activitiesList = document.getElementById('activities-list');
-            activitiesList.innerHTML = ''; // Clear previous activities
+        function renderPlagiarismResults(comparisons, aiAnalysis, wordCount) {
+            const container = document.getElementById('plagiarism-results');
+            let html = '';
             
-            subject.activities.forEach(activity => {
-                const activityCard = document.createElement('div');
-                activityCard.className = 'subject-card p-4 bg-gray-100 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 cursor-pointer';
-                activityCard.onclick = () => startChatFromActivity(currentSubjectKey, activity.name);
+            // 1. Local Document Comparison Results
+            if (comparisons.length > 0) {
+                html += '<div class="mb-6">';
+                html += '<h4 class="font-bold text-lg mb-2 text-red-600">⚠️ Similitud con Documentos Internos</h4>';
+                comparisons.sort((a, b) => b.similarity - a.similarity);
+                
+                for (const comp of comparisons) {
+                    const compClass = comp.similarity >= 70 ? 'similarity-high' : 'similarity-medium';
+                    html += `<div class="p-4 rounded-xl border-2 ${compClass} mb-3">`;
+                    html += `<div class="flex justify-between items-center">`;
+                    html += `<div><h5 class="font-bold">${comp.title}</h5><p class="text-sm">Autor: ${comp.author}</p></div>`;
+                    html += `<span class="text-xl font-bold text-red-600">${comp.similarity.toFixed(1)}% Igual</span>`;
+                    html += `</div>`;
+                    if (comp.matchingPhrases.length > 0) {
+                         html += `<div class="mt-2 text-xs text-gray-600 italic border-t border-gray-300 pt-1">Coincidencia: "${comp.matchingPhrases[0]}"</div>`;
+                    }
+                    html += `</div>`;
+                }
+                html += '</div>';
+            } else {
+                html += '<div class="p-4 mb-4 bg-green-50 border border-green-200 rounded-xl text-green-700 font-medium">✅ No se encontraron coincidencias con documentos guardados.</div>';
+            }
 
-                const activityTitle = document.createElement('h4');
-                activityTitle.className = 'font-bold text-lg text-gray-800 dark:text-gray-200';
-                activityTitle.textContent = activity.name;
+            // 2. AI Analysis Report
+            html += '<div class="p-4 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 shadow-sm">';
+            html += '<h4 class="font-bold mb-3 flex items-center gap-2 text-purple-700 dark:text-purple-300">';
+            html += '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>';
+            html += 'Análisis de Inteligencia Artificial';
+            html += '</h4>';
+            html += '<div class="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">';
+            html += aiAnalysis.replace(/\n/g, '<br>');
+            html += '</div>';
+            html += '</div>';
 
-                const activityDesc = document.createElement('p');
-                activityDesc.className = 'text-sm text-gray-700 dark:text-gray-400';
-                activityDesc.textContent = activity.desc;
+            container.innerHTML = html;
+        }
 
-                activityCard.appendChild(activityTitle);
-                activityCard.appendChild(activityDesc);
-                activitiesList.appendChild(activityCard);
+        // Documents
+        function renderDocuments() {
+            const container = document.getElementById('documents-list');
+            
+            if (documents.length === 0) {
+                container.innerHTML = '<div class="text-center py-12 text-gray-400"><p>No hay documentos guardados</p></div>';
+                return;
+            }
+
+            container.innerHTML = documents.map((doc, index) => {
+                const wordCount = doc.content.split(/\s+/).length;
+                return `<div class="document-card flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 mb-2">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold">DOC</div>
+                        <div>
+                            <h4 class="font-semibold">${doc.title}</h4>
+                            <p class="text-xs text-gray-500">${doc.author} • ${wordCount} palabras</p>
+                        </div>
+                    </div>
+                    <button onclick="deleteDocument(${index})" class="text-red-400 hover:text-red-600">Eliminar</button>
+                    </div>`;
+            }).join('');
+        }
+
+        function renderCompareDocuments() {
+            const container = document.getElementById('compare-documents-list');
+            
+            if (documents.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center text-gray-400">Sube documentos primero.</div>';
+                return;
+            }
+
+            container.innerHTML = documents.map((doc, index) => {
+                return `<div class="p-4 rounded-xl border hover:border-blue-500 cursor-pointer bg-white dark:bg-slate-800" onclick="compareWithDocument(${index})">
+                    <h4 class="font-bold text-sm truncate">${doc.title}</h4>
+                    <p class="text-xs text-gray-500">${doc.author}</p>
+                </div>`;
+            }).join('');
+        }
+
+        function compareWithDocument(index) {
+            const doc = documents[index];
+            document.getElementById('plagiarism-text').value = doc.content;
+            updateWordCount();
+            showToast('Texto cargado para análisis');
+        }
+
+        function openUploadModal() {
+            document.getElementById('upload-modal').classList.remove('hidden');
+        }
+
+        function closeUploadModal() {
+            document.getElementById('upload-modal').classList.add('hidden');
+        }
+
+        function saveDocument() {
+            const title = document.getElementById('doc-title').value.trim();
+            const author = document.getElementById('doc-author').value.trim() || 'Anónimo';
+            const group = document.getElementById('doc-group').value.trim() || 'Sin grupo';
+            const content = document.getElementById('doc-content').value.trim();
+
+            if (!title || !content) {
+                showToast('Completa el título y contenido');
+                return;
+            }
+
+            documents.push({ title, author, group, content, date: new Date().toISOString() });
+            localStorage.setItem('dreamsteam_documents', JSON.stringify(documents));
+            
+            closeUploadModal();
+            renderDocuments();
+            showToast('Documento guardado');
+        }
+
+        function deleteDocument(index) {
+            if (confirm('¿Eliminar este documento?')) {
+                documents.splice(index, 1);
+                localStorage.setItem('dreamsteam_documents', JSON.stringify(documents));
+                renderDocuments();
+            }
+        }
+
+        // Loading
+        function showLoading(text) {
+            document.getElementById('loading-text').textContent = text || 'Cargando...';
+            document.getElementById('loading-overlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+
+        // Gemini API Call
+        async function callGemini(prompt) {
+            // CORREGIDO: Usar CONFIG.apiUrl y CONFIG.apiKey en lugar de variables indefinidas
+            const response = await fetch(CONFIG.apiUrl + '?key=' + CONFIG.apiKey, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        temperature: 0.7,
+                        maxOutputTokens: 2048
+                    }
+                })
             });
 
-            switchScreen('subject-detail-screen', 'activities-screen');
-        };
-        
-        // Nueva función para iniciar un chat específico desde una actividad
-        window.startChatFromActivity = (subjectKey, activityName) => {
-            const subject = subjectInfo[subjectKey];
-            const activity = subject.activities.find(a => a.name === activityName);
-            if (!subject || !activity) return;
+            if (!response.ok) {
+                throw new Error('API Error');
+            }
 
-            switchScreen(document.querySelector('.screen:not(.hidden)').id, 'chat-screen');
-            localChatHistory = []; // Clear previous chat history
-
-            const initialUserMessage = `¡Hola DREAMSTEAM! Ayúdame con la actividad de ${subject.title} llamada "${activity.name}". Explícame cómo hacerla paso a paso y qué recursos visuales serían útiles.`;
-            document.getElementById('chat-input').value = initialUserMessage; // Pre-fill input
-            updateSendButtonState(); // Show send button
+            const data = await response.json();
             
-            // Simular el envío del mensaje del usuario al chat y al historial
-            addMessageToChat('user', initialUserMessage);
-            localChatHistory.push({ role: 'user', parts: [{ text: initialUserMessage }] });
-            // No limpiar el input aún, el usuario podría querer editar antes de enviar,
-            // pero lo enviaremos automáticamente.
-            
-            sendMessage(true); // Trigger AI response for the initial message
-        };
-
-        // Helper function to validate email format
-        function isValidEmail(email) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return emailRegex.test(email);
-        }
-
-        // --- Authentication Logic (Firebase) ---
-        window.login = async () => {
-            const emailOrUsername = document.getElementById('email-or-username').value.trim();
-            const password = document.getElementById('password').value;
-            if (!emailOrUsername || !password) {
-                showToast("Por favor, ingresa correo/nombre de usuario y contraseña.");
-                return;
-            }
-
-            let emailToLogin = emailOrUsername;
-            let authenticated = false;
-
-            console.log("Attempting login for:", emailOrUsername);
-
-            // 1. Try logging in directly with email first
-            if (isValidEmail(emailOrUsername)) {
-                try {
-                    console.log("Trying to sign in with email:", emailToLogin);
-                    const userCredential = await signInWithEmailAndPassword(auth, emailToLogin, password);
-                    await updateDoc(doc(db, "users", userCredential.user.uid), { lastLogin: new Date() });
-                    authenticated = true;
-                    console.log("Login successful with email!");
-                } catch (error) {
-                    console.error("Login with email failed:", error.code, error.message);
-                    // Continue to try with username if email fails
-                }
-            } 
-            
-            // 2. If not yet authenticated, try with username
-            if (!authenticated) {
-                try {
-                    console.log("Trying to find user by name:", emailOrUsername);
-                    const usersRef = collection(db, "users");
-                    const q = query(usersRef, where("name", "==", emailOrUsername));
-                    const querySnapshot = await getDocs(q);
-
-                    if (!querySnapshot.empty) {
-                        const userData = querySnapshot.docs[0].data();
-                        emailToLogin = userData.email; // Get the email associated with the username
-                        console.log(`Found user '${emailOrUsername}' with email: ${emailToLogin}. Attempting login with this email...`);
-                        
-                        // Now try to log in with the fetched email (associated with the username)
-                        const userCredential = await signInWithEmailAndPassword(auth, emailToLogin, password);
-                        await updateDoc(doc(db, "users", userCredential.user.uid), { lastLogin: new Date() });
-                        authenticated = true;
-                        console.log("Login successful with username (via email)!");
-                    } else {
-                        console.log("User by name not found in Firestore.");
-                        showToast("Usuario no encontrado o credenciales incorrectas.");
-                    }
-                } catch (error) {
-                    console.error("Login error (after username lookup):", error.code, error.message);
-                    showToast("Credenciales incorrectas. Verifica tu correo/nombre de usuario y contraseña.");
-                }
-            }
-
-            if (!authenticated) {
-                showToast("Credenciales incorrectas. Verifica tu correo/nombre de usuario y contraseña.");
-            }
-        };
-
-        window.register = async () => {
-            const name = document.getElementById('reg-name').value.trim();
-            const email = document.getElementById('reg-email').value;
-            const password = document.getElementById('reg-password').value;
-            if (!name || !email || !password) {
-                showToast("Por favor, completa todos los campos.");
-                return;
-            }
-            if (password.length < 6) {
-                showToast("La contraseña debe tener al menos 6 caracteres.");
-                return;
-            }
-
-            // Check if name already exists
-            try {
-                const usersRef = collection(db, "users");
-                const q = query(usersRef, where("name", "==", name));
-                const querySnapshot = await getDocs(q);
-                if (!querySnapshot.empty) {
-                    showToast("Este nombre de usuario ya está en uso. Elige otro.");
-                    return;
-                }
-            } catch (error) {
-                console.error("Error checking existing username:", error);
-                showToast("Error al verificar nombre de usuario. Intenta de nuevo.");
-                return;
-            }
-
-            try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                // Also save the name in Firestore
-                await setDoc(doc(db, "users", userCredential.user.uid), { name, email, createdAt: new Date(), profilePicture: null }); // Initialize profilePicture
-                showToast(`Registro exitoso, ${name}.`);
-                showLogin();
-            }
-            catch (error) {
-                showToast(error.code === 'auth/email-already-in-use' ? "Este correo ya está registrado." : "Error al registrar.");
-                console.error("Register error:", error.code, error.message);
-            }
-        };
-
-        window.sendPasswordResetLink = async () => {
-            const email = document.getElementById('forgot-email').value;
-            if (!email) {
-                showToast("Por favor, ingresa tu correo electrónico.");
-                return;
-            }
-            try {
-                await sendPasswordResetEmail(auth, email);
-                showToast(`Enlace enviado. Revisa tu correo (y la carpeta de spam).`);
-            } catch (error) { 
-                showToast("Error al enviar el enlace. Verifica el correo.");
-                console.error("Password reset error:", error); 
-            }
-        };
-
-        window.resetPassword = async () => {
-            const newPassword = document.getElementById('reset-new-password').value;
-            const confirmPassword = document.getElementById('reset-confirm-password').value;
-            if (newPassword !== confirmPassword) {
-                showToast("Las contraseñas no coinciden.");
-                return;
-            }
-            try {
-                await confirmPasswordReset(auth, window.oobCode, newPassword);
-                showToast("Contraseña restablecida.");
-                window.history.replaceState({}, document.title, window.location.pathname);
-                showLogin();
-            } catch (error) { 
-                showToast("Error al restablecer. El enlace puede haber expirado o ser inválido.");
-                console.error("Reset password error:", error);
-            }
-        };
-
-        window.changePassword = async () => {
-            const currentUser = auth.currentUser;
-            const currentPassword = document.getElementById('current-password').value;
-            const newPassword = document.getElementById('new-password').value;
-            if (!currentUser || !currentPassword || !newPassword) {
-                showToast("Completa todos los campos.");
-                return;
-            }
-            if (newPassword.length < 6) {
-                showToast("La nueva contraseña debe tener al menos 6 caracteres.");
-                return;
-            }
-            try {
-                const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
-                await reauthenticateWithCredential(currentUser, credential);
-                await updatePassword(currentUser, newPassword);
-                showToast("Contraseña cambiada exitosamente.");
-                showProfile();
-            } catch (error) { 
-                showToast("Error: La contraseña actual es incorrecta o hubo un problema.");
-                console.error("Change password error:", error);
-            }
-        };
-
-        window.logout = async () => {
-            try {
-                await signOut(auth);
-                showToast("Sesión cerrada.");
-                switchScreen(document.querySelector('.screen:not(.hidden)').id, 'login-screen');
-            } catch (error) {
-                showToast("Error al cerrar sesión.");
-                console.error("Logout error:", error);
-            }
-        };
-
-        // --- Profile Management ---
-        window.showEditNameModal = () => {
-            document.getElementById('new-name-input').value = userName || '';
-            document.getElementById('edit-name-modal').classList.remove('hidden');
-        };
-        window.hideEditNameModal = () => document.getElementById('edit-name-modal').classList.add('hidden');
-        
-        window.saveNewName = async () => {
-            const newName = document.getElementById('new-name-input').value.trim();
-            if (!newName) {
-                showToast("El nombre no puede estar vacío.");
-                return;
-            }
-            const user = auth.currentUser;
-            if (!user) return;
-
-            const userDocRef = doc(db, "users", user.uid);
-            try {
-                await updateDoc(userDocRef, { name: newName });
-                userName = newName;
-                document.getElementById('profile-user-name').textContent = newName;
-                // Update initial if no profile picture
-                if (!userProfilePicture) {
-                    document.getElementById('profile-initial').textContent = newName.charAt(0).toUpperCase();
-                }
-                hideEditNameModal();
-                showToast("Nombre actualizado.");
-            } catch (error) {
-                showToast("Error al actualizar el nombre.");
-                console.error("Name update error:", error);
-            }
-        };
-
-        // Handle profile image selection and upload
-        async function handleProfileImageSelect(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            if (!auth.currentUser) {
-                showToast("Debes iniciar sesión para subir una foto de perfil.");
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const base64Image = e.target.result;
-                const userId = auth.currentUser.uid;
-                const userDocRef = doc(db, "users", userId);
-
-                try {
-                    await updateDoc(userDocRef, { profilePicture: base64Image });
-                    userProfilePicture = base64Image;
-                    showToast("Foto de perfil actualizada.");
-                    showProfile(); // Re-render profile with new picture
-                    console.log("Profile picture uploaded and updated in Firestore.");
-                } catch (error) {
-                    showToast("Error al subir la foto de perfil.");
-                    console.error("Profile picture upload error:", error);
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // --- Privacy and Data Management ---
-        window.showPrivacyScreen = () => switchScreen('profile-screen', 'privacy-screen');
-        window.showDeleteDataConfirmation = () => document.getElementById('delete-data-modal').classList.remove('hidden');
-        window.hideDeleteDataConfirmation = () => document.getElementById('delete-data-modal').classList.add('hidden');
-
-        window.deleteUserData = async () => {
-            const user = auth.currentUser;
-            if (!user) return;
-            
-            hideDeleteDataConfirmation();
-            showToast("Eliminando tu historial de chat...");
-
-            const chatCollectionRef = collection(db, "users", user.uid, "chatHistory");
-            try {
-                const querySnapshot = await getDocs(chatCollectionRef);
-                const batch = writeBatch(db);
-                querySnapshot.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-                await batch.commit();
-                showToast("Todos tus datos de chat han sido eliminados.");
-            } catch (error) {
-                showToast("Error al eliminar los datos.");
-                console.error("Data deletion error:", error);
-            }
-        };
-
-        // --- Chat with AI Logic (Gemini API) ---
-        function addMessageToChat(sender, text, imageUrl = null) {
-            const chatWindow = document.getElementById('chat-window');
-            const bubble = document.createElement('div');
-            bubble.classList.add('chat-bubble', sender === 'user' ? 'user-bubble' : 'ai-bubble');
-
-            if (imageUrl) {
-                const img = document.createElement('img');
-                img.src = imageUrl;
-                img.alt = 'Imagen enviada por el usuario';
-                bubble.appendChild(img);
-            }
-
-            if (text) {
-                const textNode = document.createElement('p');
-                // Aggressively remove any special characters from the AI response.
-                // This removes $, *, and # to ensure clean text.
-                const processedText = text.replace(/[\$\*#]/g, '');
-                
-                textNode.textContent = processedText;
-                bubble.appendChild(textNode);
+            if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+                return data.candidates[0].content.parts[0].text;
             }
             
-            chatWindow.appendChild(bubble);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
+            throw new Error('Invalid response structure');
         }
-
-        window.sendMessage = async (isInternalCall = false) => { // Added isInternalCall parameter
-            const input = document.getElementById('chat-input');
-            const userMessage = input.value.trim();
-            
-            // Only return if it's not an internal call and there's no message or image
-            if (!isInternalCall && !userMessage && !selectedImageBase64) return;
-
-            const userId = auth.currentUser ? auth.currentUser.uid : null;
-            if (!userId) {
-                showToast("Debes iniciar sesión para chatear.");
-                if (!isInternalCall) { // Clear input if user tried to send without login
-                    input.value = '';
-                    removeSelectedImage();
-                    updateSendButtonState();
-                }
-                return;
-            }
-
-            // Only process user input for display if it's not an internal call
-            let displayUserMessage = userMessage;
-            let displayImageUrl = null;
-
-            if (!isInternalCall) {
-                const lowerCaseMessage = userMessage.toLowerCase();
-                const creatorKeywords = ['creador', 'creó', 'hizo', 'programador', 'programó', 'desarrollador', 'utsc', 'quien te creo'];
-                if (creatorKeywords.some(keyword => lowerCaseMessage.includes(keyword))) {
-                    const creatorResponse = "Fui creado y programado por un talentoso equipo de estudiantes de ingeniería de la Universidad Tecnológica de Santa Catarina (UTSC). ¡Están trabajando duro para hacerme cada vez más inteligente!";
-                    addMessageToChat('user', userMessage);
-                    addMessageToChat('ai', creatorResponse);
-                    
-                    localChatHistory.push({ role: 'user', parts: [{ text: userMessage }] });
-                    localChatHistory.push({ role: 'model', parts: [{ text: creatorResponse }] });
-                    await addDoc(collection(db, "users", userId, "chatHistory"), { sender: 'user', text: userMessage, timestamp: new Date() });
-                    await addDoc(collection(db, "users", userId, "chatHistory"), { sender: 'ai', text: creatorResponse, timestamp: new Date() });
-
-                    input.value = '';
-                    removeSelectedImage();
-                    updateSendButtonState();
-                    return;
-                }
-
-                const messageParts = [];
-                if (selectedImageBase64) {
-                    const imageInput = document.getElementById('image-input');
-                    const mimeType = imageInput.files[0].type;
-                    messageParts.push({
-                        inlineData: {
-                            mimeType: mimeType,
-                            data: selectedImageBase64
-                        }
-                    });
-                    displayImageUrl = `data:${mimeType};base64,${selectedImageBase64}`;
-                }
-                if (userMessage) {
-                    messageParts.push({ text: userMessage });
-                }
-
-                addMessageToChat('user', userMessage, displayImageUrl);
-                localChatHistory.push({ role: 'user', parts: messageParts });
-                await addDoc(collection(db, "users", userId, "chatHistory"), {
-                    sender: 'user', text: userMessage, imageUrl: displayImageUrl, timestamp: new Date()
-                });
-
-                input.value = '';
-                removeSelectedImage();
-                updateSendButtonState();
-            }
-
-
-            const typingIndicator = document.createElement('div');
-            typingIndicator.classList.add('chat-bubble', 'ai-bubble', 'animate-pulse');
-            typingIndicator.textContent = 'Pensando...';
-            typingIndicator.id = 'typing-indicator';
-            document.getElementById('chat-window').appendChild(typingIndicator);
-            document.getElementById('chat-window').scrollTop = document.getElementById('chat-window').scrollHeight;
-            
-            try {
-                // Modified AI persona for more detailed activity responses
-                const personaInstruction = {
-                    role: "user",
-                    parts: [{ text: "IMPORTANTE: Eres un asistente robot llamado DREAMSTEAM, creado por estudiantes de la UTSC. NUNCA te identifiques como un modelo de Google. Tu objetivo es ayudar con temas de STEAM. Cuando se te pida sobre actividades de una asignatura, sugiere MÚLTIPLES ideas (al menos 3 si es posible), explicando CÓMO hacerlas paso a paso y qué TIPO DE RECURSOS VISUALES serían útiles (ej. 'diagrama', 'fotos del proceso', 'video tutorial'). Responde siempre con texto plano y simple. Para multiplicar, usa una 'x' o la palabra 'por'. Por ejemplo: '2 por 2 es 4'." }]
-                };
-                const conversationPayload = [personaInstruction, ...localChatHistory];
-
-                const geminiApiKey = "AIzaSyBHl-7LN4KXR2hXy_vKHgXZmjtjY_O-SYc";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${geminiApiKey}`;
-                const payload = { contents: conversationPayload };
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error.message);
-                }
-
-                const result = await response.json();
-                let aiResponseText = result.candidates[0].content.parts[0].text;
-                
-                document.getElementById('typing-indicator').remove();
-                addMessageToChat('ai', aiResponseText);
-                localChatHistory.push({ role: 'model', parts: [{ text: aiResponseText }] });
-
-                await addDoc(collection(db, "users", userId, "chatHistory"), {
-                    sender: 'ai', text: aiResponseText, timestamp: new Date()
-                });
-
-            } catch (error) {
-                console.error('Error fetching AI response:', error);
-                document.getElementById('typing-indicator').remove();
-                addMessageToChat('ai', "Lo siento, ocurrió un error al contactar a la IA. Revisa la consola para más detalles.");
-            }
-        };
-
-        // --- Robot Control and Bluetooth Logic ---
-        async function connectBluetooth() {
-            if (!navigator.bluetooth) {
-                showToast("Tu navegador no soporta Web Bluetooth. Asegúrate de usar un navegador compatible como Chrome.");
-                return;
-            }
-
-            const connectButton = document.getElementById('bt-connect-btn');
-            const buttonSpan = connectButton.querySelector('span');
-            
-            if (bluetoothDevice && bluetoothDevice.gatt.connected) {
-                bluetoothDevice.gatt.disconnect();
-                buttonSpan.textContent = 'Conectar vía Bluetooth';
-                connectButton.classList.remove('bg-green-500', 'hover:bg-green-600');
-                connectButton.classList.add('btn-primary');
-                showToast("Robot desconectado.");
-                bluetoothDevice = null;
-                document.getElementById('battery-status-container').classList.remove('visible');
-                return;
-            }
-
-            connectButton.disabled = true;
-            buttonSpan.textContent = 'Buscando...';
-
-            try {
-                console.log("Solicitando dispositivo Bluetooth...");
-                showToast("Abre la ventana de Bluetooth y selecciona tu dispositivo.");
-                bluetoothDevice = await navigator.bluetooth.requestDevice({
-                    acceptAllDevices: true,
-                });
-                
-                console.log(`Dispositivo seleccionado: ${bluetoothDevice.name}`);
-                buttonSpan.textContent = 'Conectando...';
-                
-                const server = await bluetoothDevice.gatt.connect();
-                console.log("Conectado al servidor GATT.");
-                
-                buttonSpan.textContent = `Conectado a ${bluetoothDevice.name || 'Dispositivo'}`;
-                connectButton.classList.remove('btn-primary');
-                connectButton.classList.add('bg-green-500', 'hover:bg-green-600');
-                showToast(`¡Conectado a ${bluetoothDevice.name || 'tu robot'}!`);
-
-                document.getElementById('battery-status-container').classList.add('visible');
-                updateRobotBatteryLevel();
-
-            } catch (error) {
-                let errorMsg = "No se pudo conectar.";
-                if (error.name === 'NotFoundError') {
-                    errorMsg = "No se seleccionó ningún dispositivo. Inténtalo de nuevo.";
-                } else if (error.name === 'NotAllowedError') {
-                    errorMsg = "Permiso para acceder a Bluetooth denegado.";
-                }
-                showToast(errorMsg);
-                console.error("Error de Bluetooth:", error);
-                buttonSpan.textContent = 'Conectar vía Bluetooth';
-                connectButton.classList.add('btn-primary');
-                connectButton.classList.remove('bg-green-500', 'hover:bg-green-600');
-                document.getElementById('battery-status-container').classList.remove('visible');
-            } finally {
-                connectButton.disabled = false;
-            }
-        }
-
-        async function moveRobot(direction) {
-            if (!bluetoothDevice || !bluetoothDevice.gatt.connected) {
-                showToast("El robot no está conectado.");
-                return;
-            }
-            
-            const SERVICE_UUID = '0000ffe0-0000-1000-8000-00805f9b34fb'; 
-            const CHARACTERISTIC_UUID = '0000ffe1-0000-1000-8000-00805f9b34fb';
-
-            try {
-                console.log('Obteniendo servicio...');
-                const service = await bluetoothDevice.gatt.getPrimaryService(SERVICE_UUID);
-                console.log('Obteniendo característica...');
-                const characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
-                
-                const encoder = new TextEncoder();
-                const command = direction.charAt(0); 
-                console.log(`Enviando comando: ${command}`);
-                await characteristic.writeValue(encoder.encode(command));
-            } catch (error) {
-                showToast(`Error al enviar comando. Revisa que los UUIDs sean correctos para tu robot.`);
-                console.error('Error al enviar comando Bluetooth:', error);
-            }
-        }
-
-        function updateRobotBatteryLevel() {
-            const batteryElement = document.getElementById('robot-battery-level');
-            const randomBattery = Math.floor(Math.random() * 80) + 21;
-            batteryElement.textContent = `${randomBattery}%`;
-        }
-
-        // --- Image Handling Logic ---
-        function handleImageSelect(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                document.getElementById('image-preview').src = e.target.result;
-                document.getElementById('image-preview-container').style.display = 'block';
-                selectedImageBase64 = e.target.result.split(',')[1];
-                updateSendButtonState();
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function removeSelectedImage() {
-            document.getElementById('image-input').value = '';
-            document.getElementById('image-preview').src = '#';
-            document.getElementById('image-preview-container').style.display = 'none';
-            selectedImageBase64 = null;
-            updateSendButtonState();
-        }
-
-        // --- Voice Recognition & UI Logic ---
-        function setupSpeechRecognition() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                document.getElementById('mic-button-container').style.display = 'none';
-                return;
-            }
-            recognition = new SpeechRecognition();
-            recognition.lang = 'es-MX';
-            recognition.onresult = (event) => {
-                document.getElementById('chat-input').value = event.results[0][0].transcript;
-                updateSendButtonState();
-                sendMessage();
-            };
-            recognition.onstart = () => { isListening = true; document.getElementById('mic-btn').classList.add('listening'); };
-            recognition.onend = () => { isListening = false; document.getElementById('mic-btn').classList.remove('listening'); };
-        }
-        window.toggleVoiceRecognition = () => { if(recognition) isListening ? recognition.stop() : recognition.start(); };
-        
-        window.updateSendButtonState = () => {
-            const hasText = document.getElementById('chat-input').value.trim().length > 0;
-            const hasImage = !!selectedImageBase64;
-            document.getElementById('mic-button-container').classList.toggle('hidden', hasText || hasImage);
-            document.getElementById('send-button-container').classList.toggle('hidden', !hasText && !hasImage);
-        };
-        
-        // --- Initial setup calls ---
-        document.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('theme') === 'dark') {
-                document.body.classList.add('dark');
-            }
-            setupSpeechRecognition();
-            updateSendButtonState();
-            if (new URLSearchParams(window.location.search).has('oobCode')) {
-                showResetPassword();
-            }
-            document.getElementById('image-input').addEventListener('change', handleImageSelect);
-            document.getElementById('remove-image-btn').addEventListener('click', removeSelectedImage);
-            // Add event listener for profile image input
-            document.getElementById('profile-image-input').addEventListener('change', handleProfileImageSelect);
-        });
-
-        window.toggleDarkMode = () => {
-            document.body.classList.toggle('dark');
-            localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
-        };
-
-        // Make functions globally accessible
-        window.switchScreen = switchScreen;
-        window.login = login;
-        window.register = register;
-        window.sendPasswordResetLink = sendPasswordResetLink;
-        window.resetPassword = resetPassword;
-        window.changePassword = changePassword;
-        window.saveNewName = saveNewName;
-        window.showEditNameModal = showEditNameModal;
-        window.hideEditNameModal = hideEditNameModal;
-        window.showPrivacyScreen = showPrivacyScreen;
-        window.showDeleteDataConfirmation = showDeleteDataConfirmation;
-        window.hideDeleteDataConfirmation = hideDeleteDataConfirmation;
-        window.deleteUserData = deleteUserData;
-        window.sendMessage = sendMessage;
-        window.connectBluetooth = connectBluetooth;
-        window.moveRobot = moveRobot;
-        window.logout = logout; // Make logout globally accessible
-        window.showSubjectDetail = showSubjectDetail; // Re-add this
-        window.showActivities = showActivities; // Re-add this
-        window.startChatFromActivity = startChatFromActivity;
-
     </script>
 </body>
 </html>
