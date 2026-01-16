@@ -59,6 +59,7 @@
             transition: all 0.3s ease;
         }
         .toast.show { opacity: 1; }
+        .toast.error { background-color: #ef4444; }
         
         .similarity-high { background-color: #fef2f2; border-color: #fecaca; }
         .similarity-medium { background-color: #fffbeb; border-color: #fde68a; }
@@ -115,6 +116,7 @@
 <body class="min-h-screen">
     <div id="toast" class="toast"></div>
 
+    <!-- PANTALLA DE BIENVENIDA -->
     <div id="welcome-screen" class="min-h-screen flex items-center justify-center p-4">
         <div class="screen w-full max-w-lg p-8 relative">
             <button onclick="toggleDarkMode()" class="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
@@ -169,6 +171,7 @@
         </div>
     </div>
 
+    <!-- PANTALLA PRINCIPAL -->
     <div id="main-screen" class="min-h-screen p-4 md:p-6 hidden">
         <div class="max-w-6xl mx-auto">
             <div class="screen p-4 mb-6">
@@ -262,6 +265,7 @@
         </div>
     </div>
 
+    <!-- PANTALLA DE CHAT -->
     <div id="chat-screen" class="fixed inset-0 flex flex-col bg-[#f0f2f5] dark:bg-[#0f172a] z-50 hidden">
         <div class="flex-1 w-full max-w-4xl mx-auto flex flex-col h-full bg-white dark:bg-[#1e293b] shadow-xl md:rounded-2xl md:my-4 md:h-[calc(100vh-2rem)] overflow-hidden">
             
@@ -338,6 +342,7 @@
         </div>
     </div>
 
+    <!-- PANTALLA DETECTOR DE PLAGIO -->
     <div id="plagiarism-screen" class="min-h-screen p-4 md:p-6 hidden">
         <div class="max-w-6xl mx-auto">
             <div class="screen p-4 mb-6">
@@ -431,6 +436,7 @@
         </div>
     </div>
 
+    <!-- MODAL DE SUBIDA -->
     <div id="upload-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
         <div class="screen w-full max-w-md mx-4 p-6">
             <div class="flex items-center justify-between mb-6">
@@ -466,6 +472,7 @@
         </div>
     </div>
 
+    <!-- OVERLAY DE CARGA -->
     <div id="loading-overlay" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
         <div class="screen p-8 text-center">
             <div class="w-16 h-16 mx-auto mb-4 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
@@ -474,31 +481,35 @@
     </div>
 
     <script>
-        // CONFIGURACIÓN DE SEGURIDAD (API KEY CORREGIDA)
+        // ==========================================================
+        // CONFIGURACIÓN (Asegúrate que esta Key tenga permisos para localhost)
+        // ==========================================================
         const CONFIG = {
-            apiKey: 'AIzaSyCsD-oRxrNXHFCyXjiH05_3N17aytJzWoU', // NUEVA CLAVE APLICADA
+            apiKey: 'AIzaSyCsD-oRxrNXHFCyXjiH05_3N17aytJzWoU', 
             model: 'gemini-1.5-flash',
             apiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
         };
 
-        // State
+        // Estado Global
         let userName = '';
         let darkMode = false;
         let documents = [];
         let chatMessages = [];
-        let currentMode = 'general'; // 'general' or 'plagiarism'
+        let currentMode = 'general';
         let uploadedImage = null;
         let recognition = null;
         let isListening = false;
 
-        // Initialize
+        // Inicialización
         document.addEventListener('DOMContentLoaded', () => {
             const savedName = localStorage.getItem('dreamsteam_username');
             const savedDarkMode = localStorage.getItem('dreamsteam_darkmode') === 'true';
             const savedDocs = localStorage.getItem('dreamsteam_documents');
             
             if (savedDocs) {
-                documents = JSON.parse(savedDocs);
+                try {
+                    documents = JSON.parse(savedDocs);
+                } catch(e) { documents = []; }
             }
             
             darkMode = savedDarkMode;
@@ -512,7 +523,7 @@
                 renderDocuments();
             }
 
-            // Initialize speech recognition
+            // Inicializar reconocimiento de voz
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 recognition = new SpeechRecognition();
@@ -530,14 +541,15 @@
                 recognition.onend = () => stopListening();
             }
 
-            // Word count listener
+            // Listener de contador de palabras
             document.getElementById('plagiarism-text').addEventListener('input', updateWordCount);
         });
 
-        // Screen navigation
+        // Navegación
         function showScreen(screen) {
             document.querySelectorAll('[id$="-screen"]').forEach(el => el.classList.add('hidden'));
-            document.getElementById(screen + '-screen').classList.remove('hidden');
+            const target = document.getElementById(screen + '-screen');
+            if(target) target.classList.remove('hidden');
         }
 
         function goToMain() {
@@ -545,7 +557,7 @@
             renderDocuments();
         }
 
-        // Auth
+        // Auth Mockup
         function handleLogin() {
             const input = document.getElementById('username-input').value.trim();
             if (input) {
@@ -564,7 +576,7 @@
             showScreen('welcome');
         }
 
-        // Dark mode
+        // Dark Mode
         function toggleDarkMode() {
             darkMode = !darkMode;
             document.body.classList.toggle('dark', darkMode);
@@ -583,15 +595,17 @@
             });
         }
 
-        // Toast
-        function showToast(message) {
+        // Toast Notification
+        function showToast(message, isError = false) {
             const toast = document.getElementById('toast');
             toast.textContent = message;
+            toast.classList.remove('error');
+            if(isError) toast.classList.add('error');
             toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+            setTimeout(() => toast.classList.remove('show'), 4000);
         }
 
-        // Chat functions
+        // Chat Logic
         function openDirectChat() {
             currentMode = 'general';
             document.getElementById('chat-title').textContent = 'Asistente IA';
@@ -627,7 +641,6 @@
                 return '<div class="chat-bubble ' + bubbleClass + '">' + imageHtml + content + '</div>';
             }).join('');
             
-            // Scroll to bottom
             setTimeout(() => {
                 container.scrollTop = container.scrollHeight;
             }, 100);
@@ -647,24 +660,24 @@
             renderChat();
             input.value = '';
             
-            // Show loading
+            // Loading state
             const loadingId = 'loading-' + Date.now();
             chatMessages.push({ role: 'ai', content: '...', id: loadingId });
             renderChat();
             
             try {
-                const systemPrompt = 'Eres DREAMSTEAM Assistant, un experto en integridad académica. Tu objetivo es ayudar a detectar si un texto fue escrito por una IA o si es un plagio, y dar consejos de redacción. Responde en español de forma útil y directa.';
+                const systemPrompt = 'Eres DREAMSTEAM Assistant, un experto en integridad académica. Ayuda a detectar si un texto fue escrito por una IA o si es plagio. Responde en español de forma útil y directa.';
                 
                 const response = await callGemini(systemPrompt + '\n\nUsuario: ' + message);
                 
-                // Remove loading and add response
                 chatMessages = chatMessages.filter(msg => msg.id !== loadingId);
                 chatMessages.push({ role: 'ai', content: response });
                 renderChat();
             } catch (error) {
                 chatMessages = chatMessages.filter(msg => msg.id !== loadingId);
-                chatMessages.push({ role: 'ai', content: 'Tuve un problema de conexión. ¿Podrías intentar de nuevo? (Error: API Fetch Failed)' });
+                chatMessages.push({ role: 'ai', content: '❌ ' + error.message });
                 renderChat();
+                showToast(error.message, true);
             }
             
             removeImage();
@@ -676,7 +689,7 @@
             showToast('Chat limpiado');
         }
 
-        // Image handling
+        // Imagenes
         function handleImageUpload(event) {
             const file = event.target.files[0];
             if (file) {
@@ -696,10 +709,10 @@
             document.getElementById('file-input').value = '';
         }
 
-        // Voice recognition
+        // Voz
         function toggleVoice() {
             if (!recognition) {
-                showToast('Navegador no soporta voz');
+                showToast('Tu navegador no soporta entrada de voz.', true);
                 return;
             }
             
@@ -717,7 +730,7 @@
             document.getElementById('mic-btn').classList.remove('text-red-500');
         }
 
-        // Plagiarism detection
+        // Lógica de Plagio
         function updateWordCount() {
             const text = document.getElementById('plagiarism-text').value;
             const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
@@ -732,14 +745,14 @@
         async function analyzePlagiarism() {
             const text = document.getElementById('plagiarism-text').value.trim();
             if (!text) {
-                showToast('Ingresa un texto para analizar');
+                showToast('Ingresa un texto para analizar', true);
                 return;
             }
 
             showLoading('Analizando similitudes y patrones de IA...');
 
             try {
-                // 1. Compare with saved documents (Local)
+                // 1. Local Comparison
                 let comparisonResults = [];
                 if (documents.length > 0) {
                     for (const doc of documents) {
@@ -755,17 +768,17 @@
                     }
                 }
 
-                // 2. AI Analysis (Gemini)
+                // 2. AI Analysis
                 const analysisPrompt = `
                 Actúa como un detector de plagio y detector de IA avanzado. Analiza el siguiente texto:
                 "${text.substring(0, 3000)}"
                 
                 Tu tarea es devolver un reporte con:
-                1. Probabilidad de que sea generado por IA (0-100%) y por qué (busca patrones repetitivos, falta de profundidad, estilo robótico).
+                1. Probabilidad de que sea generado por IA (0-100%) y por qué.
                 2. Calidad de la redacción.
                 3. Si detectas parafraseo inusual.
                 
-                Dame la respuesta en formato estructurado HTML simple (usa <b> para negritas).
+                Usa <b> para negritas. No uses Markdown, solo texto plano con tags HTML básicos.
                 `;
 
                 const aiAnalysis = await callGemini(analysisPrompt);
@@ -776,15 +789,13 @@
             } catch (error) {
                 hideLoading();
                 console.error(error);
-                showToast('Error de conexión al analizar');
+                showToast('Error: ' + error.message, true);
             }
         }
 
         function calculateSimilarity(text1, text2) {
             const words1 = text1.toLowerCase().split(/\s+/);
             const words2 = text2.toLowerCase().split(/\s+/);
-            
-            // Create n-grams (3 words) for better accuracy
             const ngrams1 = [];
             const ngrams2 = [];
             
@@ -796,11 +807,8 @@
             }
             
             if (ngrams1.length === 0) return 0;
-
             const matches = ngrams1.filter(ng => ngrams2.includes(ng)).length;
-            const similarity = (matches / ngrams1.length) * 100;
-            
-            return Math.min(similarity, 100);
+            return Math.min((matches / ngrams1.length) * 100, 100);
         }
 
         function findMatchingPhrases(text1, text2) {
@@ -823,7 +831,7 @@
             const container = document.getElementById('plagiarism-results');
             let html = '';
             
-            // 1. Local Document Comparison Results
+            // Local Results
             if (comparisons.length > 0) {
                 html += '<div class="mb-6">';
                 html += '<h4 class="font-bold text-lg mb-2 text-red-600">⚠️ Similitud con Documentos Internos</h4>';
@@ -843,10 +851,10 @@
                 }
                 html += '</div>';
             } else {
-                html += '<div class="p-4 mb-4 bg-green-50 border border-green-200 rounded-xl text-green-700 font-medium">✅ No se encontraron coincidencias con documentos guardados.</div>';
+                html += '<div class="p-4 mb-4 bg-green-50 border border-green-200 rounded-xl text-green-700 font-medium">✅ No se encontraron coincidencias internas.</div>';
             }
 
-            // 2. AI Analysis Report
+            // AI Analysis
             html += '<div class="p-4 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 shadow-sm">';
             html += '<h4 class="font-bold mb-3 flex items-center gap-2 text-purple-700 dark:text-purple-300">';
             html += '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>';
@@ -860,15 +868,13 @@
             container.innerHTML = html;
         }
 
-        // Documents
+        // Gestion de Documentos
         function renderDocuments() {
             const container = document.getElementById('documents-list');
-            
             if (documents.length === 0) {
                 container.innerHTML = '<div class="text-center py-12 text-gray-400"><p>No hay documentos guardados</p></div>';
                 return;
             }
-
             container.innerHTML = documents.map((doc, index) => {
                 const wordCount = doc.content.split(/\s+/).length;
                 return `<div class="document-card flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 mb-2">
@@ -886,12 +892,10 @@
 
         function renderCompareDocuments() {
             const container = document.getElementById('compare-documents-list');
-            
             if (documents.length === 0) {
                 container.innerHTML = '<div class="col-span-full text-center text-gray-400">Sube documentos primero.</div>';
                 return;
             }
-
             container.innerHTML = documents.map((doc, index) => {
                 return `<div class="p-4 rounded-xl border hover:border-blue-500 cursor-pointer bg-white dark:bg-slate-800" onclick="compareWithDocument(${index})">
                     <h4 class="font-bold text-sm truncate">${doc.title}</h4>
@@ -907,13 +911,8 @@
             showToast('Texto cargado para análisis');
         }
 
-        function openUploadModal() {
-            document.getElementById('upload-modal').classList.remove('hidden');
-        }
-
-        function closeUploadModal() {
-            document.getElementById('upload-modal').classList.add('hidden');
-        }
+        function openUploadModal() { document.getElementById('upload-modal').classList.remove('hidden'); }
+        function closeUploadModal() { document.getElementById('upload-modal').classList.add('hidden'); }
 
         function saveDocument() {
             const title = document.getElementById('doc-title').value.trim();
@@ -922,13 +921,11 @@
             const content = document.getElementById('doc-content').value.trim();
 
             if (!title || !content) {
-                showToast('Completa el título y contenido');
+                showToast('Completa el título y contenido', true);
                 return;
             }
-
             documents.push({ title, author, group, content, date: new Date().toISOString() });
             localStorage.setItem('dreamsteam_documents', JSON.stringify(documents));
-            
             closeUploadModal();
             renderDocuments();
             showToast('Documento guardado');
@@ -942,7 +939,6 @@
             }
         }
 
-        // Loading
         function showLoading(text) {
             document.getElementById('loading-text').textContent = text || 'Cargando...';
             document.getElementById('loading-overlay').classList.remove('hidden');
@@ -952,32 +948,49 @@
             document.getElementById('loading-overlay').classList.add('hidden');
         }
 
-        // Gemini API Call
+        // ==========================================================
+        // LLAMADA A LA API (Con Manejo de Errores Mejorado)
+        // ==========================================================
         async function callGemini(prompt) {
-            // CORREGIDO: Usar CONFIG.apiUrl y CONFIG.apiKey en lugar de variables indefinidas
-            const response = await fetch(CONFIG.apiUrl + '?key=' + CONFIG.apiKey, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 2048
-                    }
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('API Error');
-            }
-
-            const data = await response.json();
+            // Se usa la URL y KEY correctas del objeto CONFIG
+            const url = CONFIG.apiUrl + '?key=' + CONFIG.apiKey;
             
-            if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
-                return data.candidates[0].content.parts[0].text;
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: {
+                            temperature: 0.7,
+                            maxOutputTokens: 2048
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    // Intento de leer el error exacto de Google
+                    const errorBody = await response.json().catch(() => ({}));
+                    console.error("Detalle del Error API:", errorBody);
+
+                    let msg = 'Error desconocido en la API (' + response.status + ')';
+                    if (response.status === 403) msg = '⛔ BLOQUEADO (403): Tu API Key está restringida y no permite este sitio web. Revisa Google Cloud Console.';
+                    if (response.status === 400) msg = '⚠️ ERROR 400: Petición inválida a la IA.';
+                    
+                    throw new Error(msg);
+                }
+
+                const data = await response.json();
+                
+                if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+                    return data.candidates[0].content.parts[0].text;
+                }
+                
+                throw new Error('La IA no devolvió texto válido.');
+            } catch (error) {
+                // Re-lanzar el error para que la UI lo muestre
+                throw error; 
             }
-            
-            throw new Error('Invalid response structure');
         }
     </script>
 </body>
